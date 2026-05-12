@@ -71,13 +71,14 @@ export async function getDashboardData(customerId: string): Promise<DashboardDat
       COUNT(CASE WHEN t.duedate >= (SYSDATE - 30) AND t.duedate < (SYSDATE - 14) THEN 1 END) AS month1count,
       SUM(CASE WHEN t.duedate < (SYSDATE - 30) THEN t.foreignamountunpaid ELSE 0 END) AS olderamount,
       COUNT(CASE WHEN t.duedate < (SYSDATE - 30) THEN 1 END) AS oldercount,
-      t.currency AS currency
+      cur.symbol AS currency
     FROM transaction t
+    LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.type = 'CustInvc'
       AND t.entity = ${customerId}
       AND t.duedate < SYSDATE
-      AND t.status = 'CustInvc:A'
-    GROUP BY t.currency
+      AND t.foreignamountunpaid > 0
+    GROUP BY cur.symbol
     FETCH FIRST 1 ROWS ONLY
   `);
 
@@ -119,11 +120,13 @@ export async function getOpenInvoices(customerId: string, endDate?: string): Pro
   const rows = await suiteQL<RawInvoice>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
-           t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid, t.currency
+           t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
+           cur.symbol AS currency
     FROM transaction t
+    LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.type = 'CustInvc'
       AND t.entity = ${customerId}
-      AND t.status = 'CustInvc:A'
+      AND t.foreignamountunpaid > 0
       ${dateClause}
     ORDER BY t.duedate ASC
   `);
@@ -159,8 +162,10 @@ export async function getTransactions(
 
   const rows = await suiteQL<RawTransaction>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
-           t.type, t.otherrefnum, t.memo, t.foreigntotal, t.status, t.currency
+           t.type, t.otherrefnum, t.memo, t.foreigntotal, t.status,
+           cur.symbol AS currency
     FROM transaction t
+    LEFT JOIN currency cur ON cur.id = t.currency
     WHERE ${clauses.join(" AND ")}
     ORDER BY t.trandate DESC
     FETCH FIRST 500 ROWS ONLY
@@ -198,8 +203,10 @@ export async function getInvoiceDetail(
   const rows = await suiteQL<RawInvoice>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
-           t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid, t.currency
+           t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
+           cur.symbol AS currency
     FROM transaction t
+    LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.id = ${invoiceId}
       AND t.entity = ${customerId}
       AND t.type = 'CustInvc'
@@ -262,8 +269,10 @@ export async function getTransactionDetail(
   const rows = await suiteQL<RawTransactionRow>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
-           t.type, t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid, t.currency
+           t.type, t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
+           cur.symbol AS currency
     FROM transaction t
+    LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.id = ${transactionId}
       AND t.entity = ${customerId}
     FETCH FIRST 1 ROWS ONLY

@@ -62,7 +62,7 @@ export default function InvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Reference", "Date", "Due Date", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
+                {["Reference", "Date", "Due Date", "Days Overdue", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted">
                     {h}
                   </th>
@@ -70,30 +70,39 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
-              {loading && <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
+              {loading && <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
               {!loading && invoices.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
               )}
               {invoices.map((inv) => {
-                const isOverdue = inv.dueDate < new Date().toISOString().slice(0, 10);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const due = new Date(inv.dueDate);
+                due.setHours(0, 0, 0, 0);
+                const daysOverdue = Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
+                const isOverdue = daysOverdue > 0;
                 return (
                   <tr key={inv.id} className="hover:bg-pret-bg transition-colors">
-                    <td className="px-4 py-3 font-semibold text-pret-teal">{inv.tranId}</td>
-                    <td className="px-4 py-3 text-pret-text-muted">{fmtDate(inv.tranDate)}</td>
+                    <td className={`px-4 py-3 font-semibold ${isOverdue ? "text-pret-red" : "text-pret-teal"}`}>{inv.tranId}</td>
+                    <td className={`px-4 py-3 ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmtDate(inv.tranDate)}</td>
                     <td className="px-4 py-3">
                       <span className={`font-medium ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>
                         {fmtDate(inv.dueDate)}
                       </span>
-                      {isOverdue && (
-                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider bg-pret-red/10 text-pret-red rounded px-1.5 py-0.5">
-                          Overdue
+                    </td>
+                    <td className="px-4 py-3">
+                      {isOverdue ? (
+                        <span className="inline-flex items-center gap-1 text-sm font-bold text-pret-red">
+                          {daysOverdue} day{daysOverdue !== 1 ? "s" : ""}
                         </span>
+                      ) : (
+                        <span className="text-sm text-pret-text-muted">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-pret-text-muted max-w-xs truncate">{inv.memo}</td>
-                    <td className="px-4 py-3 text-right text-pret-text">{fmt(inv.total, inv.currency)}</td>
-                    <td className="px-4 py-3 text-right text-pret-text-muted">{fmt(inv.amountPaid, inv.currency)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-pret-text">{fmt(inv.amountDue, inv.currency)}</td>
+                    <td className={`px-4 py-3 max-w-xs truncate ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{inv.memo}</td>
+                    <td className={`px-4 py-3 text-right ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>{fmt(inv.total, inv.currency)}</td>
+                    <td className={`px-4 py-3 text-right ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmt(inv.amountPaid, inv.currency)}</td>
+                    <td className={`px-4 py-3 text-right font-bold ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>{fmt(inv.amountDue, inv.currency)}</td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/invoices/${inv.id}`}
@@ -109,7 +118,7 @@ export default function InvoicesPage() {
             {!loading && invoices.length > 0 && (
               <tfoot>
                 <tr className="border-t-2 border-pret-bg-warm bg-pret-bg">
-                  <td colSpan={6} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
+                  <td colSpan={7} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
                     Total outstanding
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-pret-red text-base">{fmt(total, currency)}</td>

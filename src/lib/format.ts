@@ -1,7 +1,8 @@
 export function fmt(amount: number, currency = "GBP"): string {
+  const code = /^[A-Z]{3}$/.test(currency ?? "") ? currency : "GBP";
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency,
+    currency: code,
     minimumFractionDigits: 2,
   }).format(amount);
 }
