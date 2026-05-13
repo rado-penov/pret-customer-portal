@@ -6,8 +6,8 @@ function nsUrlAccountId(): string {
   return process.env.NS_ACCOUNT_ID!.toLowerCase().replace(/_/g, "-");
 }
 
-const NS_BASE = `https://${nsUrlAccountId()}.suitetalk.api.netsuite.com`;
-const NS_RESTLET_BASE = `https://${nsUrlAccountId()}.restlets.api.netsuite.com`;
+function nsBase(): string { return `https://${nsUrlAccountId()}.suitetalk.api.netsuite.com`; }
+function nsRestletBase(): string { return `https://${nsUrlAccountId()}.restlets.api.netsuite.com`; }
 
 interface OAuthParams {
   oauth_consumer_key: string;
@@ -63,7 +63,7 @@ function encode(str: string): string {
 }
 
 export async function suiteQL<T>(query: string): Promise<T[]> {
-  const url = `${NS_BASE}/services/rest/query/v1/suiteql`;
+  const url = `${nsBase()}/services/rest/query/v1/suiteql`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -85,7 +85,7 @@ export async function suiteQL<T>(query: string): Promise<T[]> {
 }
 
 export async function nsPatch(path: string, body: object): Promise<void> {
-  const url = `${NS_BASE}/services/rest/record/v1${path}`;
+  const url = `${nsBase()}/services/rest/record/v1${path}`;
   const res = await fetch(url, {
     method: "PATCH",
     headers: {
@@ -102,7 +102,7 @@ export async function nsPatch(path: string, body: object): Promise<void> {
 }
 
 export async function nsGet<T>(path: string): Promise<T> {
-  const url = `${NS_BASE}/services/rest/record/v1${path}`;
+  const url = `${nsBase()}/services/rest/record/v1${path}`;
   const res = await fetch(url, {
     headers: {
       Authorization: buildAuthHeader("GET", url),
@@ -123,7 +123,7 @@ export async function callRestlet<TReq, TRes>(
   deployId: string,
   payload: TReq
 ): Promise<TRes> {
-  const url = `${NS_RESTLET_BASE}/app/site/hosting/restlet.nl?script=${scriptId}&deploy=${deployId}`;
+  const url = `${nsRestletBase()}/app/site/hosting/restlet.nl?script=${scriptId}&deploy=${deployId}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
