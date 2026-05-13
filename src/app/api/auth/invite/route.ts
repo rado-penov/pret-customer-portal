@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { findContactByEmail } from "@/lib/netsuite/queries";
