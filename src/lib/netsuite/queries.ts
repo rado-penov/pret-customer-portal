@@ -218,7 +218,7 @@ export async function getInvoiceDetail(
   let lines: InvoiceLine[] = [];
   try {
     const lineRows = await suiteQL<RawLine>(`
-      SELECT tl.id, i.itemid AS item, tl.description, tl.quantity, tl.rate,
+      SELECT tl.id, i.itemid AS item, tl.memo AS description, tl.quantity, tl.rate,
              NVL(tl.foreignamount, tl.amount) AS amount
       FROM transactionline tl
       LEFT JOIN item i ON i.id = tl.item
