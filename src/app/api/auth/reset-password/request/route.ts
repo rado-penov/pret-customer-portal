@@ -48,7 +48,14 @@ export async function POST(req: NextRequest) {
       .setExpirationTime("1h")
       .sign(secret);
 
-    const baseUrl = process.env.PORTAL_URL ?? "http://localhost:3000";
+    // Use PORTAL_URL if set, otherwise derive from the incoming request
+    // (handles localhost, ngrok, and production automatically)
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+    const detectedOrigin = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : req.nextUrl.origin;
+    const baseUrl = process.env.PORTAL_URL ?? detectedOrigin;
     const resetUrl = `${baseUrl}/reset-password/confirm?token=${token}`;
 
     if (isDemoMode() || !process.env.SMTP_HOST) {

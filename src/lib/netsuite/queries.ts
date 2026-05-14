@@ -215,27 +215,30 @@ export async function getInvoiceDetail(
 
   if (!rows[0]) return null;
 
-  const lines = await suiteQL<RawLine>(`
-    SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
-    FROM transactionline tl
-    LEFT JOIN item i ON i.id = tl.item
-    WHERE tl.transaction = ${invoiceId}
-      AND tl.mainline = 'F'
-      AND tl.taxline  = 'F'
-    ORDER BY tl.linesequencenumber ASC
-  `);
-
-  return {
-    ...mapInvoice(rows[0]),
-    lines: lines.map((l) => ({
+  let lines: InvoiceLine[] = [];
+  try {
+    const lineRows = await suiteQL<RawLine>(`
+      SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
+      FROM transactionline tl
+      LEFT JOIN item i ON i.id = tl.item
+      WHERE tl.transaction = ${invoiceId}
+        AND tl.mainline = 'F'
+        AND tl.taxline  = 'F'
+      ORDER BY tl.linesequencenumber ASC
+    `);
+    lines = lineRows.map((l) => ({
       id: l.id,
       item: l.item ?? "",
       description: l.description ?? "",
       quantity: parseFloat(l.quantity ?? "0"),
       rate: parseFloat(l.rate ?? "0"),
       amount: parseFloat(l.amount ?? "0"),
-    })),
-  };
+    }));
+  } catch (lineErr) {
+    console.warn("[getInvoiceDetail] Line items query failed for invoice", invoiceId, lineErr);
+  }
+
+  return { ...mapInvoice(rows[0]), lines };
 }
 
 // ─── Payment ──────────────────────────────────────────────────────────────────
@@ -280,29 +283,35 @@ export async function getTransactionDetail(
 
   if (!rows[0]) return null;
 
-  const lines = await suiteQL<RawLine>(`
-    SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
-    FROM transactionline tl
-    LEFT JOIN item i ON i.id = tl.item
-    WHERE tl.transaction = ${transactionId}
-      AND tl.mainline = 'F'
-      AND tl.taxline  = 'F'
-    ORDER BY tl.linesequencenumber ASC
-  `);
-
-  const r = rows[0];
-  return {
-    ...mapInvoice(r),
-    type: r.type,
-    typeLabel: TRANSACTION_TYPE_LABELS[r.type] ?? r.type,
-    lines: lines.map((l) => ({
+  let lines: InvoiceLine[] = [];
+  try {
+    const lineRows = await suiteQL<RawLine>(`
+      SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
+      FROM transactionline tl
+      LEFT JOIN item i ON i.id = tl.item
+      WHERE tl.transaction = ${transactionId}
+        AND tl.mainline = 'F'
+        AND tl.taxline  = 'F'
+      ORDER BY tl.linesequencenumber ASC
+    `);
+    lines = lineRows.map((l) => ({
       id: l.id,
       item: l.item ?? "",
       description: l.description ?? "",
       quantity: parseFloat(l.quantity ?? "0"),
       rate: parseFloat(l.rate ?? "0"),
       amount: parseFloat(l.amount ?? "0"),
-    })),
+    }));
+  } catch (lineErr) {
+    console.warn("[getTransactionDetail] Line items query failed for transaction", transactionId, lineErr);
+  }
+
+  const r = rows[0];
+  return {
+    ...mapInvoice(r),
+    type: r.type,
+    typeLabel: TRANSACTION_TYPE_LABELS[r.type] ?? r.type,
+    lines,
   };
 }
 
