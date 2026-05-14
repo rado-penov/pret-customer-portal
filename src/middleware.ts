@@ -6,7 +6,7 @@ const PUBLIC_PATHS = [
   "/api/auth/login",
   "/reset-password",
   "/api/auth/reset-password",
-  "/api/test-smtp",
+  "/api/smtpcheck",
 ];
 
 export async function middleware(req: NextRequest) {
