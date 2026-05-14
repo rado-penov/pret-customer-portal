@@ -231,7 +231,7 @@ export async function getInvoiceDetail(
       id: l.id,
       item: l.item ?? "",
       description: l.description ?? "",
-      quantity: parseFloat(l.quantity ?? "0"),
+      quantity: Math.abs(parseFloat(l.quantity ?? "0")),
       rate: parseFloat(l.rate ?? "0"),
       amount: parseFloat(l.amount ?? "0"),
     }));
@@ -301,7 +301,7 @@ export async function getTransactionDetail(
       id: l.id,
       item: l.item ?? "",
       description: l.description ?? "",
-      quantity: parseFloat(l.quantity ?? "0"),
+      quantity: Math.abs(parseFloat(l.quantity ?? "0")),
       rate: parseFloat(l.rate ?? "0"),
       amount: parseFloat(l.amount ?? "0"),
     }));
