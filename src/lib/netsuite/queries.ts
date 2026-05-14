@@ -218,13 +218,14 @@ export async function getInvoiceDetail(
   let lines: InvoiceLine[] = [];
   try {
     const lineRows = await suiteQL<RawLine>(`
-      SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
+      SELECT tl.id, i.itemid AS item, tl.description, tl.quantity, tl.rate,
+             NVL(tl.foreignamount, tl.amount) AS amount
       FROM transactionline tl
       LEFT JOIN item i ON i.id = tl.item
       WHERE tl.transaction = ${invoiceId}
         AND tl.mainline = 'F'
         AND tl.taxline  = 'F'
-      ORDER BY tl.linesequencenumber ASC
+      ORDER BY tl.id ASC
     `);
     lines = lineRows.map((l) => ({
       id: l.id,
@@ -235,7 +236,8 @@ export async function getInvoiceDetail(
       amount: parseFloat(l.amount ?? "0"),
     }));
   } catch (lineErr) {
-    console.warn("[getInvoiceDetail] Line items query failed for invoice", invoiceId, lineErr);
+    const msg = lineErr instanceof Error ? lineErr.message : String(lineErr);
+    console.error(`\n[LINE ITEMS ERROR] Invoice ${invoiceId}: ${msg}\n`);
   }
 
   return { ...mapInvoice(rows[0]), lines };
@@ -286,13 +288,14 @@ export async function getTransactionDetail(
   let lines: InvoiceLine[] = [];
   try {
     const lineRows = await suiteQL<RawLine>(`
-      SELECT tl.id, i.displayname AS item, tl.description, tl.quantity, tl.rate, tl.foreignamount AS amount
+      SELECT tl.id, i.itemid AS item, tl.description, tl.quantity, tl.rate,
+             NVL(tl.foreignamount, tl.amount) AS amount
       FROM transactionline tl
       LEFT JOIN item i ON i.id = tl.item
       WHERE tl.transaction = ${transactionId}
         AND tl.mainline = 'F'
         AND tl.taxline  = 'F'
-      ORDER BY tl.linesequencenumber ASC
+      ORDER BY tl.id ASC
     `);
     lines = lineRows.map((l) => ({
       id: l.id,
@@ -303,7 +306,8 @@ export async function getTransactionDetail(
       amount: parseFloat(l.amount ?? "0"),
     }));
   } catch (lineErr) {
-    console.warn("[getTransactionDetail] Line items query failed for transaction", transactionId, lineErr);
+    const msg = lineErr instanceof Error ? lineErr.message : String(lineErr);
+    console.error(`\n[LINE ITEMS ERROR] Transaction ${transactionId}: ${msg}\n`);
   }
 
   const r = rows[0];
