@@ -6,6 +6,30 @@ import type { Transaction } from "@/types";
 import { TRANSACTION_TYPE_LABELS } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
+function exportTransactionsCSV(transactions: Transaction[]) {
+  const headers = ["Date", "Reference", "Type", "Customer Ref", "Memo", "Currency", "Amount"];
+  const rows = transactions.map((t) => [
+    t.tranDate,
+    t.tranId,
+    t.typeLabel,
+    t.otherRefNum || "",
+    t.memo || "",
+    t.currency,
+    t.total,
+  ]);
+  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 const TYPE_OPTIONS = ["", ...Object.keys(TRANSACTION_TYPE_LABELS)];
 
 const TYPE_PILL: Record<string, string> = {
@@ -98,7 +122,7 @@ export default function TransactionsPage() {
               className="w-full rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none" />
           </div>
         </div>
-        <div className="flex gap-3 mt-4 pt-4 border-t border-pret-bg-warm">
+        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-pret-bg-warm flex-wrap">
           <button type="submit"
             className="bg-pret-red hover:bg-pret-red-deep text-white text-xs font-semibold uppercase tracking-widest rounded px-5 py-2 transition-colors">
             Search
@@ -107,6 +131,18 @@ export default function TransactionsPage() {
             className="text-xs font-semibold uppercase tracking-widest text-pret-text-muted hover:text-pret-text px-3 py-2 transition-colors">
             Clear
           </button>
+          {transactions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => exportTransactionsCSV(transactions)}
+              className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors ml-auto"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
+          )}
         </div>
       </form>
 

@@ -5,6 +5,29 @@ import Link from "next/link";
 import type { Invoice } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
+function exportInvoicesCSV(invoices: Invoice[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const headers = ["Reference", "Date", "Due Date", "Days Overdue", "Memo", "Currency", "Total", "Paid", "Amount Due"];
+  const rows = invoices.map((inv) => {
+    const due = new Date(inv.dueDate);
+    due.setHours(0, 0, 0, 0);
+    const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)));
+    return [inv.tranId, inv.tranDate, inv.dueDate, daysOverdue || "", inv.memo, inv.currency, inv.total, inv.amountPaid, inv.amountDue];
+  });
+  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `open-invoices-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [endDate, setEndDate]   = useState("");
@@ -50,6 +73,17 @@ export default function InvoicesPage() {
           {endDate && (
             <button onClick={() => { setEndDate(""); load(); }} className="text-xs text-pret-text-muted hover:text-pret-text">
               Clear
+            </button>
+          )}
+          {invoices.length > 0 && (
+            <button
+              onClick={() => exportInvoicesCSV(invoices)}
+              className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
             </button>
           )}
         </div>

@@ -25,16 +25,18 @@ export async function getSession(): Promise<SessionUser | null> {
   }
 }
 
+const SECURE = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
 export function setSessionCookie(token: string, response: Response): void {
   response.headers.append(
     "Set-Cookie",
-    `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=28800`
+    `${COOKIE_NAME}=${token}; HttpOnly${SECURE}; SameSite=Lax; Path=/; Max-Age=28800`
   );
 }
 
 export function clearSessionCookie(response: Response): void {
   response.headers.append(
     "Set-Cookie",
-    `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`
+    `${COOKIE_NAME}=; HttpOnly${SECURE}; SameSite=Lax; Path=/; Max-Age=0`
   );
 }
