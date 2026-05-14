@@ -49,8 +49,9 @@ function ConfirmForm() {
     if (res.ok) {
       setSuccess(true);
     } else {
-      const data = await res.json();
-      setError(data.error ?? "Something went wrong. Please try again.");
+      let msg = "Something went wrong. Please try again.";
+      try { const d = await res.json(); msg = d.error ?? msg; } catch {}
+      setError(msg);
     }
   }
 
