@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const CRITERIA = [
@@ -16,7 +16,6 @@ const CRITERIA = [
 
 function ConfirmForm() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
@@ -26,8 +25,8 @@ function ConfirmForm() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!token) router.replace("/reset-password");
-  }, [token, router]);
+    if (!token) window.location.href = "/reset-password";
+  }, [token]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -154,7 +153,7 @@ export default function ResetPasswordConfirmPage() {
             Customer Portal
           </div>
         </div>
-        <Suspense>
+        <Suspense fallback={null}>
           <ConfirmForm />
         </Suspense>
       </div>
