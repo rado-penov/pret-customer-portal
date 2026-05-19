@@ -1,5 +1,5 @@
 import type { Tool, ToolResultBlockParam } from "@anthropic-ai/sdk/resources/messages";
-import { mockQueries } from "@/lib/mock";
+import { getDashboardData, getOpenInvoices, getTransactions, getInvoiceDetail } from "@/lib/netsuite/queries";
 
 export const PRETTY_TOOLS: Tool[] = [
   {
@@ -58,16 +58,16 @@ export const PRETTY_TOOLS: Tool[] = [
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function executeTool(name: string, input: Record<string, any>): Promise<ToolResultBlockParam> {
+export async function executeTool(name: string, input: Record<string, any>, customerId: string): Promise<ToolResultBlockParam> {
   try {
     let result: unknown;
 
     if (name === "get_dashboard") {
-      result = await mockQueries.getDashboard();
+      result = await getDashboardData(customerId);
     } else if (name === "get_open_invoices") {
-      result = await mockQueries.getOpenInvoices(input.due_by);
+      result = await getOpenInvoices(customerId, input.due_by);
     } else if (name === "get_transactions") {
-      result = await mockQueries.getTransactions({
+      result = await getTransactions(customerId, {
         startDate:   input.start_date,
         endDate:     input.end_date,
         type:        input.type,
@@ -75,7 +75,7 @@ export async function executeTool(name: string, input: Record<string, any>): Pro
         otherRefNum: input.other_ref_num,
       });
     } else if (name === "get_invoice_detail") {
-      result = await mockQueries.getInvoiceDetail(input.invoice_id);
+      result = await getInvoiceDetail(input.invoice_id, customerId);
     } else {
       result = { error: `Unknown tool: ${name}` };
     }

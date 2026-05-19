@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { MessageParam, ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 import { getSession } from "@/lib/auth/session";
-import { isDemoMode } from "@/lib/mock";
 import { PRETTY_TOOLS, executeTool } from "@/lib/pretty/tools";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -12,10 +11,6 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-
-  if (!isDemoMode()) {
-    return NextResponse.json({ error: "PRETty is only available in demo mode." }, { status: 403 });
-  }
 
   const { messages }: { messages: MessageParam[] } = await req.json();
 
@@ -59,7 +54,7 @@ Guidelines:
           response.content
             .filter((b): b is ToolUseBlock => b.type === "tool_use")
             .map(async (block) => {
-              const result = await executeTool(block.name, block.input as Record<string, unknown>);
+              const result = await executeTool(block.name, block.input as Record<string, unknown>, session.customerId);
               return { ...result, tool_use_id: block.id };
             })
         );
