@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const NAV = [
   { href: "/dashboard",    label: "Dashboard" },
@@ -12,11 +12,9 @@ const NAV = [
 
 export default function NavBar({ userName, companyName }: { userName: string; companyName: string }) {
   const pathname = usePathname();
-  const router = useRouter();
-
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    window.location.href = "/login";
   }
 
   return (

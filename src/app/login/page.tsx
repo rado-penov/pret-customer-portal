@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +19,7 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res.ok) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
       const data = await res.json();
       setError(data.error ?? "Login failed. Please try again.");
