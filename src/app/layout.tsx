@@ -3,7 +3,6 @@ import "./globals.css";
 import { getSession } from "@/lib/auth/session";
 import NavBar from "@/components/ui/NavBar";
 import PRETtyWidget from "@/components/ui/PRETtyWidget";
-import { isDemoMode } from "@/lib/mock";
 
 export const metadata: Metadata = {
   title: "Pret A Manger | Customer Portal",
@@ -22,7 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
               {children}
             </main>
-            {isDemoMode() && <PRETtyWidget />}
+            <PRETtyWidget />
           </div>
         ) : (
           children

@@ -97,7 +97,7 @@ export default function PRETtyWidget() {
             <div className="ml-auto">
               <span className="inline-flex items-center gap-1 text-[10px] text-white/70">
                 <span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse" />
-                Demo
+                Live
               </span>
             </div>
           </div>
