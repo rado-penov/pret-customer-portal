@@ -95,7 +95,7 @@ export default function DashboardPage() {
         {[
           { href: "/invoices",     label: "View open invoices",    icon: "📄" },
           { href: "/transactions", label: "Browse transactions",   icon: "📋" },
-          { href: "/payments",     label: "Make a payment",        icon: "💳" },
+          { href: "/support",      label: "Contact Support",       icon: "💬" },
         ].map(({ href, label, icon }) => (
           <a
             key={href}

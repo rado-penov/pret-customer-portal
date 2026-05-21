@@ -7,7 +7,7 @@ const NAV = [
   { href: "/dashboard",    label: "Dashboard" },
   { href: "/invoices",     label: "Open Invoices" },
   { href: "/transactions", label: "Transactions" },
-  { href: "/payments",     label: "Make Payment" },
+  { href: "/support",      label: "Contact Support" },
 ];
 
 export default function NavBar({ userName, companyName }: { userName: string; companyName: string }) {

@@ -1,0 +1,91 @@
+export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+import { getSession } from "@/lib/auth/session";
+
+const MAX_TOTAL_BYTES = 15 * 1024 * 1024;
+
+function escapeHtml(str: string) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const subject = (formData.get("subject") as string ?? "").trim();
+  const message = (formData.get("message") as string ?? "").trim();
+  const files   = formData.getAll("files") as File[];
+
+  if (!subject || !message) {
+    return NextResponse.json({ error: "Subject and message are required." }, { status: 400 });
+  }
+
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  if (totalSize > MAX_TOTAL_BYTES) {
+    return NextResponse.json({ error: "Total attachment size exceeds 15 MB." }, { status: 400 });
+  }
+
+  const attachments = await Promise.all(
+    files.filter((f) => f.size > 0).map(async (f) => ({
+      filename: f.name,
+      content:  Buffer.from(await f.arrayBuffer()),
+    }))
+  );
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST!,
+    port: parseInt(process.env.SMTP_PORT ?? "587"),
+    secure: process.env.SMTP_PORT === "465",
+    auth: {
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASS!,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout:   10000,
+    socketTimeout:     15000,
+  });
+
+  await transporter.sendMail({
+    from:    `"Pret Customer Portal" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
+    to:       process.env.SMTP_FROM ?? process.env.SMTP_USER,
+    replyTo: `"${session.name}" <${session.email}>`,
+    subject: `[Portal Support] ${subject} — ${session.companyName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;">
+        <div style="background:#711323;padding:24px;">
+          <p style="color:white;margin:0;font-size:20px;font-weight:700;letter-spacing:2px;">PRET A MANGER</p>
+          <p style="color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:11px;letter-spacing:3px;text-transform:uppercase;">Customer Portal — Support Request</p>
+        </div>
+        <div style="padding:32px;background:#FAF9FA;border:1px solid #e5e0e1;border-top:none;">
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;width:100px;">From</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;">${escapeHtml(session.name)}</td></tr>
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Email</td><td style="padding:6px 0;color:#372F31;font-size:13px;">${escapeHtml(session.email)}</td></tr>
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Company</td><td style="padding:6px 0;color:#372F31;font-size:13px;">${escapeHtml(session.companyName)}</td></tr>
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Subject</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;">${escapeHtml(subject)}</td></tr>
+          </table>
+          <div style="border-top:1px solid #e5e0e1;padding-top:20px;">
+            <p style="color:#575354;font-size:12px;margin:0 0 10px;text-transform:uppercase;letter-spacing:1px;">Message</p>
+            <p style="color:#372F31;font-size:14px;line-height:1.7;white-space:pre-wrap;margin:0;">${escapeHtml(message)}</p>
+          </div>
+          ${attachments.length > 0 ? `<p style="color:#575354;font-size:12px;margin:20px 0 0;">${attachments.length} attachment${attachments.length !== 1 ? "s" : ""} included.</p>` : ""}
+        </div>
+        <div style="padding:16px;text-align:center;">
+          <p style="color:#aaa;font-size:11px;margin:0;">© ${new Date().getFullYear()} Pret A Manger. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+    text: `Support request from ${session.name} (${session.email}) at ${session.companyName}\n\nSubject: ${subject}\n\n${message}`,
+    attachments,
+  });
+
+  return NextResponse.json({ success: true });
+}

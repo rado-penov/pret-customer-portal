@@ -116,17 +116,7 @@ export default function TransactionDetailPage() {
         </div>
       </div>
 
-      {/* Pay CTA — invoices only */}
-      {isInvoice && txn.amountDue > 0 && (
-        <div className="flex justify-end">
-          <Link
-            href={`/payments?invoiceId=${txn.id}&amount=${txn.amountDue}`}
-            className="bg-pret-red hover:bg-pret-red-deep text-white font-semibold text-xs uppercase tracking-widest rounded px-6 py-3 transition-colors"
-          >
-            Pay this invoice →
-          </Link>
-        </div>
-      )}
+      {/* Pay CTA — payment temporarily hidden */}
     </div>
   );
 }
