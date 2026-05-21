@@ -6,10 +6,41 @@ import Link from "next/link";
 import type { InvoiceDetail } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
+function DownloadIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  );
+}
+
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
-  const [error, setError]     = useState("");
+  const [invoice, setInvoice]       = useState<InvoiceDetail | null>(null);
+  const [error, setError]           = useState("");
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (!invoice) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}/pdf`);
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${invoice.tranId.toLowerCase().replace(/[^a-z0-9]/g, "")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/invoices/${id}`)
@@ -47,6 +78,16 @@ export default function InvoiceDetailPage() {
             Overdue
           </span>
         )}
+        <div className="ml-auto">
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex items-center gap-2 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors disabled:opacity-50"
+          >
+            <DownloadIcon />
+            {downloading ? "Generating…" : "Download PDF"}
+          </button>
+        </div>
       </div>
 
       {/* Summary card */}
