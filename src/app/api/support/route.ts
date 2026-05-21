@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { getSession } from "@/lib/auth/session";
+import { isDemoMode } from "@/lib/mock";
 
 const MAX_TOTAL_BYTES = 15 * 1024 * 1024;
 
@@ -95,6 +96,15 @@ export async function POST(req: NextRequest) {
       </div>
     </div>
   `;
+
+  if (isDemoMode()) {
+    console.log(`\n[DEV] Support request — ref: ${ref}`);
+    console.log(`  To: ${supportEmail}`);
+    console.log(`  Subject: ${emailSubject}`);
+    console.log(`  From: ${session.name} <${session.email}>`);
+    console.log(`  Message: ${message.slice(0, 100)}${message.length > 100 ? "…" : ""}\n`);
+    return NextResponse.json({ success: true, ref });
+  }
 
   // Send to support team
   await transporter.sendMail({
