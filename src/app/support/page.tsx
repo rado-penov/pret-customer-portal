@@ -21,6 +21,7 @@ export default function SupportPage() {
   const [sizeError, setSizeError]     = useState("");
   const [submitting, setSubmitting]   = useState(false);
   const [submitted, setSubmitted]     = useState(false);
+  const [ref, setRef]                 = useState("");
   const [error, setError]             = useState("");
   const fileInputRef                  = useRef<HTMLInputElement>(null);
 
@@ -60,6 +61,7 @@ export default function SupportPage() {
       const res = await fetch("/api/support", { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok) {
+        setRef(data.ref ?? "");
         setSubmitted(true);
       } else {
         setError(data.error ?? "Something went wrong. Please try again.");
@@ -81,11 +83,16 @@ export default function SupportPage() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-pret-text mb-2">Message sent</h2>
-          <p className="text-sm text-pret-text-muted mb-6">
+          <p className="text-sm text-pret-text-muted mb-3">
             Thank you for getting in touch. Our support team will get back to you shortly.
           </p>
+          {ref && (
+            <p className="text-xs text-pret-text-muted mb-6">
+              Your reference: <span className="font-mono font-semibold text-pret-text">{ref}</span>
+            </p>
+          )}
           <button
-            onClick={() => { setSubmitted(false); setSubject(""); setMessage(""); setAttachments([]); }}
+            onClick={() => { setSubmitted(false); setSubject(""); setMessage(""); setAttachments([]); setRef(""); }}
             className="text-sm font-medium text-pret-red hover:text-pret-red-deep transition-colors"
           >
             Send another message

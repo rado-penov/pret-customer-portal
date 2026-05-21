@@ -10,6 +10,17 @@ function escapeHtml(str: string) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function generateRef(companyName: string): string {
+  const now = new Date();
+  const yy  = String(now.getFullYear()).slice(2);
+  const mm  = String(now.getMonth() + 1).padStart(2, "0");
+  const dd  = String(now.getDate()).padStart(2, "0");
+  const hh  = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${yy}${mm}${dd}${hh}${min}-${slug}`;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -54,11 +65,13 @@ export async function POST(req: NextRequest) {
     socketTimeout:     15000,
   });
 
+  const ref = generateRef(session.companyName);
+
   await transporter.sendMail({
     from:    `"Pret Customer Portal" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
     to:       process.env.SMTP_FROM ?? process.env.SMTP_USER,
     replyTo: `"${session.name}" <${session.email}>`,
-    subject: `[Portal Support] ${subject} — ${session.companyName}`,
+    subject: `[${ref}] ${subject} — ${session.companyName}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;">
         <div style="background:#711323;padding:24px;">
@@ -67,7 +80,8 @@ export async function POST(req: NextRequest) {
         </div>
         <div style="padding:32px;background:#FAF9FA;border:1px solid #e5e0e1;border-top:none;">
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-            <tr><td style="padding:6px 0;color:#575354;font-size:12px;width:100px;">From</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;">${escapeHtml(session.name)}</td></tr>
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;width:100px;">Reference</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;font-family:monospace;">${ref}</td></tr>
+            <tr><td style="padding:6px 0;color:#575354;font-size:12px;">From</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;">${escapeHtml(session.name)}</td></tr>
             <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Email</td><td style="padding:6px 0;color:#372F31;font-size:13px;">${escapeHtml(session.email)}</td></tr>
             <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Company</td><td style="padding:6px 0;color:#372F31;font-size:13px;">${escapeHtml(session.companyName)}</td></tr>
             <tr><td style="padding:6px 0;color:#575354;font-size:12px;">Subject</td><td style="padding:6px 0;color:#372F31;font-size:13px;font-weight:600;">${escapeHtml(subject)}</td></tr>
@@ -87,5 +101,5 @@ export async function POST(req: NextRequest) {
     attachments,
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, ref });
 }
