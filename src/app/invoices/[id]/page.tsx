@@ -30,7 +30,7 @@ export default function InvoiceDetailPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${invoice.tranId.toLowerCase().replace(/[^a-z0-9]/g, "")}.pdf`;
+      a.download = `${invoice.tranId.toUpperCase().replace(/[^A-Z0-9]/g, "")}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

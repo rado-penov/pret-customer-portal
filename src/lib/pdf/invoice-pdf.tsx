@@ -88,7 +88,7 @@ function fmtDate(date: string): string {
   return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function InvoicePDF({ invoice, companyName }: { invoice: InvoiceDetail; companyName: string }) {
+export function InvoicePDF({ invoice, companyName, typeLabel = "INVOICE" }: { invoice: InvoiceDetail; companyName: string; typeLabel?: string }) {
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -96,7 +96,7 @@ export function InvoicePDF({ invoice, companyName }: { invoice: InvoiceDetail; c
         {/* Header */}
         <View style={s.header}>
           <Image src={LOGO_PATH} style={s.logo} />
-          <Text style={s.invoiceTitle}>INVOICE</Text>
+          <Text style={s.invoiceTitle}>{typeLabel.toUpperCase()}</Text>
         </View>
 
         <View style={s.divider} />
@@ -141,9 +141,9 @@ export function InvoicePDF({ invoice, companyName }: { invoice: InvoiceDetail; c
             <View key={line.id} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
               <Text style={s.colItem}>{line.item || "—"}</Text>
               <Text style={s.colDesc}>{line.description || "—"}</Text>
-              <Text style={s.colQty}>{line.quantity}</Text>
-              <Text style={s.colRate}>{fmtCurrency(line.rate, invoice.currency)}</Text>
-              <Text style={s.colAmount}>{fmtCurrency(line.amount, invoice.currency)}</Text>
+              <Text style={s.colQty}>{Math.abs(line.quantity)}</Text>
+              <Text style={s.colRate}>{fmtCurrency(Math.abs(line.rate), invoice.currency)}</Text>
+              <Text style={s.colAmount}>{fmtCurrency(Math.abs(line.amount), invoice.currency)}</Text>
             </View>
           ))}
         </View>
@@ -152,17 +152,17 @@ export function InvoicePDF({ invoice, companyName }: { invoice: InvoiceDetail; c
         <View style={s.totalsContainer}>
           <View style={s.totalRow}>
             <Text style={s.totalLabel}>Net Total</Text>
-            <Text style={s.totalValue}>{fmtCurrency(invoice.total, invoice.currency)}</Text>
+            <Text style={s.totalValue}>{fmtCurrency(Math.abs(invoice.total), invoice.currency)}</Text>
           </View>
           {invoice.amountPaid > 0 && (
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Amount Paid</Text>
-              <Text style={s.totalValue}>{fmtCurrency(invoice.amountPaid, invoice.currency)}</Text>
+              <Text style={s.totalValue}>{fmtCurrency(Math.abs(invoice.amountPaid), invoice.currency)}</Text>
             </View>
           )}
           <View style={s.totalRowBold}>
             <Text style={s.totalLabelBold}>Balance Due</Text>
-            <Text style={s.totalValueBold}>{fmtCurrency(invoice.amountDue, invoice.currency)}</Text>
+            <Text style={s.totalValueBold}>{fmtCurrency(Math.abs(invoice.amountDue), invoice.currency)}</Text>
           </View>
         </View>
 

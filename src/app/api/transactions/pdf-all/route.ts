@@ -5,34 +5,44 @@ import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import JSZip from "jszip";
 import { getSession } from "@/lib/auth/session";
-import { getOpenInvoices, getInvoiceDetail } from "@/lib/netsuite/queries";
+import { getTransactions, getTransactionDetail } from "@/lib/netsuite/queries";
 import { isDemoMode, mockQueries } from "@/lib/mock";
 import { InvoicePDF } from "@/lib/pdf/invoice-pdf";
+import { TRANSACTION_TYPE_LABELS } from "@/types";
+
+const PDF_SUPPORTED_TYPES = new Set(["CustInvc", "CustCred"]);
 
 export async function GET(_req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   try {
-    const invoices = isDemoMode()
-      ? await mockQueries.getOpenInvoices()
-      : await getOpenInvoices(session.customerId);
+    const transactions = isDemoMode()
+      ? await mockQueries.getTransactions({})
+      : await getTransactions(session.customerId, {});
 
-    if (invoices.length === 0) {
-      return NextResponse.json({ error: "No open invoices to download." }, { status: 404 });
+    const supported = transactions.filter((t) => PDF_SUPPORTED_TYPES.has(t.type));
+
+    if (supported.length === 0) {
+      return NextResponse.json({ error: "No downloadable transactions found." }, { status: 404 });
     }
 
     const zip = new JSZip();
 
     await Promise.all(
-      invoices.map(async (inv) => {
+      supported.map(async (t) => {
         const detail = isDemoMode()
-          ? await mockQueries.getInvoiceDetail(inv.id)
-          : await getInvoiceDetail(inv.id, session.customerId);
+          ? await mockQueries.getTransactionDetail(t.id)
+          : await getTransactionDetail(t.id, session.customerId);
 
         if (!detail) return;
 
-        const element = React.createElement(InvoicePDF, { invoice: detail, companyName: session.companyName });
+        const typeLabel = TRANSACTION_TYPE_LABELS[detail.type] ?? "Document";
+        const element = React.createElement(InvoicePDF, {
+          invoice: detail,
+          companyName: session.companyName,
+          typeLabel,
+        });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const buffer = await renderToBuffer(element as any);
 
@@ -56,7 +66,7 @@ export async function GET(_req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("Invoice PDF-all error:", err);
+    console.error("Transactions PDF-all error:", err);
     return NextResponse.json({ error: "Failed to generate ZIP." }, { status: 500 });
   }
 }

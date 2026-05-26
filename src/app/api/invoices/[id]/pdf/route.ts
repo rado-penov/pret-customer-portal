@@ -26,7 +26,7 @@ export async function GET(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const buffer = await renderToBuffer(element as any);
 
-    const filename = `${invoice.tranId.toLowerCase().replace(/[^a-z0-9]/g, "")}.pdf`;
+    const filename = `${invoice.tranId.toUpperCase().replace(/[^A-Z0-9]/g, "")}.pdf`;
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

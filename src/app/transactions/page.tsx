@@ -41,14 +41,40 @@ const TYPE_PILL: Record<string, string> = {
 };
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState("");
-  const [startDate, setStartDate]       = useState("");
-  const [endDate, setEndDate]           = useState("");
-  const [type, setType]                 = useState("");
-  const [tranId, setTranId]             = useState("");
-  const [otherRefNum, setOtherRefNum]   = useState("");
+  const [transactions, setTransactions]     = useState<Transaction[]>([]);
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState("");
+  const [startDate, setStartDate]           = useState("");
+  const [endDate, setEndDate]               = useState("");
+  const [type, setType]                     = useState("");
+  const [tranId, setTranId]                 = useState("");
+  const [otherRefNum, setOtherRefNum]       = useState("");
+  const [downloadingAll, setDownloadingAll] = useState(false);
+
+  async function handleDownloadAll() {
+    setDownloadingAll(true);
+    try {
+      const res = await fetch("/api/transactions/pdf-all");
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(2);
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Pret${yy}${mm}${dd}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setDownloadingAll(false);
+    }
+  }
 
   function buildQS(overrides?: Partial<Record<string, string>>) {
     const vals = { startDate, endDate, type, tranId, otherRefNum, ...overrides };
@@ -132,16 +158,29 @@ export default function TransactionsPage() {
             Clear
           </button>
           {transactions.length > 0 && (
-            <button
-              type="button"
-              onClick={() => exportTransactionsCSV(transactions)}
-              className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors ml-auto"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export CSV
-            </button>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={() => exportTransactionsCSV(transactions)}
+                className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors disabled:opacity-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {downloadingAll ? "Generating…" : "Download All"}
+              </button>
+            </div>
           )}
         </div>
       </form>
