@@ -5,6 +5,7 @@ import {
   MOCK_INVOICE_DETAILS,
   MOCK_CREDIT_MEMO_DETAILS,
   MOCK_TRANSACTIONS,
+  MOCK_CONSOLIDATED_INVOICES,
 } from "./data";
 
 export const mockQueries = {
@@ -36,6 +37,8 @@ export const mockQueries = {
     if (filter.otherRefNum) txns = txns.filter((t) => t.otherRefNum.toLowerCase().includes(filter.otherRefNum!.toLowerCase()));
     return Promise.resolve(txns);
   },
+
+  getConsolidatedInvoices: () => Promise.resolve(MOCK_CONSOLIDATED_INVOICES),
 
   createPayment: (amount: number, invoiceIds: string[]) =>
     Promise.resolve({

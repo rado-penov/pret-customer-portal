@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/dashboard",    label: "Dashboard" },
-  { href: "/invoices",     label: "Open Invoices" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/support",      label: "Contact Support" },
+  { href: "/dashboard",              label: "Dashboard" },
+  { href: "/invoices",               label: "Invoices" },
+  { href: "/consolidated-invoices",  label: "Consolidated Invoices" },
+  { href: "/transactions",           label: "Transactions" },
+  { href: "/support",                label: "Contact Support" },
 ];
 
 export default function NavBar({ userName, companyName }: { userName: string; companyName: string }) {

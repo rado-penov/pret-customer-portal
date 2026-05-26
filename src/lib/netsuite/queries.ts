@@ -1,10 +1,11 @@
-import { suiteQL, callRestlet, nsPatch } from "./client";
+import { suiteQL, callRestlet, nsPatch, nsGetBinary } from "./client";
 import type {
   Invoice,
   InvoiceDetail,
   InvoiceLine,
   TransactionDetail,
   Transaction,
+  ConsolidatedInvoice,
   DashboardData,
   PaymentRequest,
   PaymentResult,
@@ -327,6 +328,61 @@ export async function updateContactPassword(
 ): Promise<void> {
   const pwdField = process.env.NS_CONTACT_PWD_FIELD!;
   await nsPatch(`/contact/${contactId}`, { [pwdField]: hashedPassword });
+}
+
+// ─── Consolidated Invoices ────────────────────────────────────────────────────
+
+interface RawCI {
+  id: string;
+  name: string;
+  cidate: string;
+  duedate: string;
+  totaldue: string;
+  invoicecount: string;
+  fileid: string;
+}
+
+export async function getConsolidatedInvoices(customerId: string): Promise<ConsolidatedInvoice[]> {
+  const rows = await suiteQL<RawCI>(`
+    SELECT ci.id,
+           ci.name,
+           TO_CHAR(ci.custrecord_nsts_ci_date,         'YYYY-MM-DD') AS cidate,
+           TO_CHAR(ci.custrecord_nsts_ci_tran_duedate, 'YYYY-MM-DD') AS duedate,
+           ci.custrecord_nsts_ci_pdf_total_due  AS totaldue,
+           ci.custrecord_nsts_ci_count_invoices AS invoicecount,
+           ci.custrecord_nsts_ci_pdffile        AS fileid
+    FROM customrecord255 ci
+    WHERE ci.custrecord_nsts_ci_customer = ${customerId}
+    ORDER BY ci.custrecord_nsts_ci_date DESC
+  `);
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name ?? "",
+    ciDate: r.cidate ?? "",
+    dueDate: r.duedate ?? "",
+    totalDue: parseFloat(r.totaldue ?? "0"),
+    invoiceCount: parseInt(r.invoicecount ?? "0", 10),
+    fileId: r.fileid ?? null,
+  }));
+}
+
+export async function getConsolidatedInvoicePdf(
+  ciId: string,
+  customerId: string
+): Promise<Buffer | null> {
+  const rows = await suiteQL<{ id: string; fileid: string }>(`
+    SELECT id, custrecord_nsts_ci_pdffile AS fileid
+    FROM customrecord255
+    WHERE id = ${ciId}
+      AND custrecord_nsts_ci_customer = ${customerId}
+    FETCH FIRST 1 ROWS ONLY
+  `);
+
+  const fileId = rows[0]?.fileid;
+  if (!fileId) return null;
+
+  return nsGetBinary(`/file/${fileId}/content`);
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────

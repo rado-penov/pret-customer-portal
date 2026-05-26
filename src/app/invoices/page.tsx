@@ -79,7 +79,7 @@ export default function InvoicesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-pret-text">Open Invoices</h1>
+          <h1 className="text-2xl font-semibold text-pret-text">Invoices</h1>
           <p className="text-sm text-pret-text-muted mt-1">All unpaid invoices on your account</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

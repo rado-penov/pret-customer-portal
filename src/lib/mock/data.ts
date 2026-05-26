@@ -1,4 +1,4 @@
-import type { Invoice, InvoiceDetail, TransactionDetail, Transaction, DashboardData } from "@/types";
+import type { Invoice, InvoiceDetail, TransactionDetail, Transaction, DashboardData, ConsolidatedInvoice } from "@/types";
 
 export const DEMO_USER = {
   contactId: "demo-001",
@@ -163,3 +163,24 @@ export const MOCK_DASHBOARD: DashboardData = {
     olderThanMonthCount: 1,
   },
 };
+
+export const MOCK_CONSOLIDATED_INVOICES: ConsolidatedInvoice[] = [
+  {
+    id: "ci-001",
+    name: "CI-2025-0041",
+    ciDate: daysAgo(45),
+    dueDate: daysAgo(15),
+    totalDue: 20650.00,
+    invoiceCount: 3,
+    fileId: null,
+  },
+  {
+    id: "ci-002",
+    name: "CI-2025-0028",
+    ciDate: daysAgo(75),
+    dueDate: daysAgo(45),
+    totalDue: 14200.00,
+    invoiceCount: 2,
+    fileId: null,
+  },
+];

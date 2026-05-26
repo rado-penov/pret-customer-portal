@@ -67,6 +67,16 @@ export interface DashboardData {
   };
 }
 
+export interface ConsolidatedInvoice {
+  id: string;
+  name: string;
+  ciDate: string;
+  dueDate: string;
+  totalDue: number;
+  invoiceCount: number;
+  fileId: string | null;
+}
+
 export interface PaymentRequest {
   amount: number;
   invoiceIds: string[];

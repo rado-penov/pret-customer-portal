@@ -118,6 +118,18 @@ export async function nsGet<T>(path: string): Promise<T> {
   return res.json();
 }
 
+export async function nsGetBinary(path: string): Promise<Buffer> {
+  const url = `${nsBase()}/services/rest/record/v1${path}`;
+  const res = await fetch(url, {
+    headers: { Authorization: buildAuthHeader("GET", url) },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`NS GET binary error ${res.status}: ${text}`);
+  }
+  return Buffer.from(await res.arrayBuffer());
+}
+
 export async function callRestlet<TReq, TRes>(
   scriptId: string,
   deployId: string,
