@@ -344,27 +344,36 @@ interface RawCI {
 
 export async function getConsolidatedInvoices(customerId: string): Promise<ConsolidatedInvoice[]> {
   const rows = await suiteQL<RawCI>(`
-    SELECT ci.id,
-           ci.name,
-           TO_CHAR(ci.custrecord_nsts_ci_date,         'YYYY-MM-DD') AS cidate,
-           TO_CHAR(ci.custrecord_nsts_ci_tran_duedate, 'YYYY-MM-DD') AS duedate,
-           ci.custrecord_nsts_ci_pdf_total_due  AS totaldue,
-           ci.custrecord_nsts_ci_count_invoices AS invoicecount,
-           ci.custrecord_nsts_ci_pdffile        AS fileid
-    FROM customrecord255 ci
-    WHERE ci.custrecord_nsts_ci_customer = ${customerId}
-    ORDER BY ci.custrecord_nsts_ci_date DESC
+    SELECT id,
+           name,
+           custrecord_nsts_ci_date         AS cidate,
+           custrecord_nsts_ci_tran_duedate AS duedate,
+           custrecord_nsts_ci_pdf_total_due  AS totaldue,
+           custrecord_nsts_ci_count_invoices AS invoicecount,
+           custrecord_nsts_ci_pdffile        AS fileid
+    FROM customrecord255
+    WHERE custrecord_nsts_ci_customer = ${customerId}
+    ORDER BY custrecord_nsts_ci_date DESC
   `);
 
   return rows.map((r) => ({
     id: r.id,
     name: r.name ?? "",
-    ciDate: r.cidate ?? "",
-    dueDate: r.duedate ?? "",
+    ciDate: normaliseDate(r.cidate),
+    dueDate: normaliseDate(r.duedate),
     totalDue: parseFloat(r.totaldue ?? "0"),
     invoiceCount: parseInt(r.invoicecount ?? "0", 10),
     fileId: r.fileid ?? null,
   }));
+}
+
+function normaliseDate(raw: string | null | undefined): string {
+  if (!raw) return "";
+  // SuiteQL custom record dates may come back as MM/DD/YYYY
+  const mdy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (mdy) return `${mdy[3]}-${mdy[1].padStart(2, "0")}-${mdy[2].padStart(2, "0")}`;
+  // Already YYYY-MM-DD or similar — return as-is
+  return raw.slice(0, 10);
 }
 
 export async function getConsolidatedInvoicePdf(
