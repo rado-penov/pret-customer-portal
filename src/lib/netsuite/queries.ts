@@ -369,9 +369,9 @@ export async function getConsolidatedInvoices(customerId: string): Promise<Conso
 
 function normaliseDate(raw: string | null | undefined): string {
   if (!raw) return "";
-  // SuiteQL custom record dates may come back as MM/DD/YYYY
-  const mdy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (mdy) return `${mdy[3]}-${mdy[1].padStart(2, "0")}-${mdy[2].padStart(2, "0")}`;
+  // SuiteQL custom record dates come back as DD/MM/YYYY (UK locale)
+  const dmy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
   // Already YYYY-MM-DD or similar — return as-is
   return raw.slice(0, 10);
 }

@@ -9,5 +9,7 @@ export function fmt(amount: number, currency = "GBP"): string {
 
 export function fmtDate(iso: string): string {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(d);
 }
