@@ -20,7 +20,12 @@ interface OAuthParams {
 }
 
 function buildAuthHeader(method: string, url: string): string {
-  const params: OAuthParams = {
+  // OAuth 1.0a requires the base URL (no query string) in the signature base string.
+  // Any URL query parameters must be merged into the normalised parameter set.
+  const urlObj = new URL(url);
+  const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+
+  const oauthParams: OAuthParams = {
     oauth_consumer_key: process.env.NS_CONSUMER_KEY!,
     oauth_token: process.env.NS_TOKEN_ID!,
     oauth_signature_method: "HMAC-SHA256",
@@ -29,14 +34,18 @@ function buildAuthHeader(method: string, url: string): string {
     oauth_version: "1.0",
   };
 
-  const sortedParams = Object.entries(params)
+  // Merge URL query params with OAuth params for the signature base string.
+  const allParams: Record<string, string> = { ...oauthParams };
+  urlObj.searchParams.forEach((value, key) => { allParams[key] = value; });
+
+  const sortedParams = Object.entries(allParams)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${encode(k)}=${encode(v)}`)
     .join("&");
 
   const baseString = [
     method.toUpperCase(),
-    encode(url),
+    encode(baseUrl),
     encode(sortedParams),
   ].join("&");
 
@@ -47,9 +56,10 @@ function buildAuthHeader(method: string, url: string): string {
     .update(baseString)
     .digest("base64");
 
-  params.oauth_signature = signature;
+  oauthParams.oauth_signature = signature;
 
-  const headerParts = Object.entries(params)
+  // Only OAuth params go in the Authorization header (not the request params).
+  const headerParts = Object.entries(oauthParams)
     .map(([k, v]) => `${k}="${encode(v!)}"`)
     .join(", ");
 
