@@ -351,7 +351,7 @@ export async function getConsolidatedInvoices(customerId: string): Promise<Conso
            custrecord_nsts_ci_pdf_total_due  AS totaldue,
            custrecord_nsts_ci_count_invoices AS invoicecount,
            custrecord_nsts_ci_pdffile        AS fileid
-    FROM customrecord255
+    FROM customrecord_nsts_ci_consolidate_invoice
     WHERE custrecord_nsts_ci_customer = ${customerId}
     ORDER BY custrecord_nsts_ci_date DESC
   `);
@@ -382,7 +382,7 @@ export async function getConsolidatedInvoicePdf(
 ): Promise<Buffer | null> {
   const rows = await suiteQL<{ id: string; fileid: string }>(`
     SELECT id, custrecord_nsts_ci_pdffile AS fileid
-    FROM customrecord255
+    FROM customrecord_nsts_ci_consolidate_invoice
     WHERE id = ${ciId}
       AND custrecord_nsts_ci_customer = ${customerId}
     FETCH FIRST 1 ROWS ONLY
