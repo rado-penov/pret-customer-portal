@@ -15,7 +15,8 @@ export async function GET() {
       : await getConsolidatedInvoices(session.customerId);
     return NextResponse.json(items);
   } catch (err) {
-    console.error("Consolidated invoices error:", err);
-    return NextResponse.json({ error: "Failed to load consolidated invoices." }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Consolidated invoices error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
