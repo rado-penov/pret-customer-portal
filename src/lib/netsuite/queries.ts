@@ -1,4 +1,4 @@
-import { suiteQL, callRestlet, nsPatch, nsGetBinary, nsGetBinaryFromMediaUrl } from "./client";
+import { suiteQL, callRestlet, callRestletGet, nsPatch, nsGetBinary } from "./client";
 import type {
   Invoice,
   InvoiceDetail,
@@ -376,6 +376,13 @@ function normaliseDate(raw: string | null | undefined): string {
   return raw.slice(0, 10);
 }
 
+interface FileRestletResult {
+  content?: string;   // base64-encoded file content
+  mimeType?: string;
+  name?: string;
+  error?: string;
+}
+
 export async function getConsolidatedInvoicePdf(
   ciId: string,
   customerId: string
@@ -391,17 +398,18 @@ export async function getConsolidatedInvoicePdf(
   const fileId = rows[0]?.fileid;
   if (!fileId) return null;
 
-  // The REST Record API file type is not available — look up the media URL via
-  // SuiteQL file table and fetch it from the app domain instead.
-  const fileRows = await suiteQL<{ url: string }>(`
-    SELECT url FROM file WHERE id = ${fileId}
-    FETCH FIRST 1 ROWS ONLY
-  `);
+  const scriptId = process.env.NS_FILE_RESTLET_SCRIPT_ID;
+  const deployId = process.env.NS_FILE_RESTLET_DEPLOY_ID;
+  if (!scriptId || !deployId) {
+    throw new Error("NS_FILE_RESTLET_SCRIPT_ID / NS_FILE_RESTLET_DEPLOY_ID not configured");
+  }
 
-  const mediaUrl = fileRows[0]?.url;
-  if (!mediaUrl) return null;
+  const result = await callRestletGet<FileRestletResult>(scriptId, deployId, { fileId });
 
-  return nsGetBinaryFromMediaUrl(mediaUrl);
+  if (result.error) throw new Error(`File server RESTlet error: ${result.error}`);
+  if (!result.content) return null;
+
+  return Buffer.from(result.content, "base64");
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────

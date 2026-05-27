@@ -8,7 +8,6 @@ function nsUrlAccountId(): string {
 
 function nsBase(): string { return `https://${nsUrlAccountId()}.suitetalk.api.netsuite.com`; }
 function nsRestletBase(): string { return `https://${nsUrlAccountId()}.restlets.api.netsuite.com`; }
-function nsAppBase(): string { return `https://${nsUrlAccountId()}.app.netsuite.com`; }
 
 interface OAuthParams {
   oauth_consumer_key: string;
@@ -131,18 +130,25 @@ export async function nsGetBinary(path: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
-export async function nsGetBinaryFromMediaUrl(relativeUrl: string): Promise<Buffer> {
-  const url = relativeUrl.startsWith("http")
-    ? relativeUrl
-    : `${nsAppBase()}${relativeUrl}`;
+export async function callRestletGet<TRes>(
+  scriptId: string,
+  deployId: string,
+  params: Record<string, string>
+): Promise<TRes> {
+  const qs = new URLSearchParams({ script: scriptId, deploy: deployId, ...params }).toString();
+  const url = `${nsRestletBase()}/app/site/hosting/restlet.nl?${qs}`;
   const res = await fetch(url, {
-    headers: { Authorization: buildAuthHeader("GET", url) },
+    method: "GET",
+    headers: {
+      Authorization: buildAuthHeader("GET", url),
+      "Content-Type": "application/json",
+    },
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`NS media download error ${res.status}: ${text}`);
+    throw new Error(`Restlet GET error ${res.status}: ${text}`);
   }
-  return Buffer.from(await res.arrayBuffer());
+  return res.json();
 }
 
 export async function callRestlet<TReq, TRes>(
