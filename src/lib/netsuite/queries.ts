@@ -1,4 +1,4 @@
-import { suiteQL, callRestlet, nsPatch, nsGetBinary } from "./client";
+import { suiteQL, callRestlet, nsPatch, nsGetBinary, nsGetBinaryFromMediaUrl } from "./client";
 import type {
   Invoice,
   InvoiceDetail,
@@ -391,7 +391,17 @@ export async function getConsolidatedInvoicePdf(
   const fileId = rows[0]?.fileid;
   if (!fileId) return null;
 
-  return nsGetBinary(`/file/${fileId}/content`);
+  // The REST Record API file type is not available — look up the media URL via
+  // SuiteQL file table and fetch it from the app domain instead.
+  const fileRows = await suiteQL<{ url: string }>(`
+    SELECT url FROM file WHERE id = ${fileId}
+    FETCH FIRST 1 ROWS ONLY
+  `);
+
+  const mediaUrl = fileRows[0]?.url;
+  if (!mediaUrl) return null;
+
+  return nsGetBinaryFromMediaUrl(mediaUrl);
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────

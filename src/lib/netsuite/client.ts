@@ -8,6 +8,7 @@ function nsUrlAccountId(): string {
 
 function nsBase(): string { return `https://${nsUrlAccountId()}.suitetalk.api.netsuite.com`; }
 function nsRestletBase(): string { return `https://${nsUrlAccountId()}.restlets.api.netsuite.com`; }
+function nsAppBase(): string { return `https://${nsUrlAccountId()}.app.netsuite.com`; }
 
 interface OAuthParams {
   oauth_consumer_key: string;
@@ -126,6 +127,20 @@ export async function nsGetBinary(path: string): Promise<Buffer> {
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`NS GET binary error ${res.status}: ${text}`);
+  }
+  return Buffer.from(await res.arrayBuffer());
+}
+
+export async function nsGetBinaryFromMediaUrl(relativeUrl: string): Promise<Buffer> {
+  const url = relativeUrl.startsWith("http")
+    ? relativeUrl
+    : `${nsAppBase()}${relativeUrl}`;
+  const res = await fetch(url, {
+    headers: { Authorization: buildAuthHeader("GET", url) },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`NS media download error ${res.status}: ${text}`);
   }
   return Buffer.from(await res.arrayBuffer());
 }
