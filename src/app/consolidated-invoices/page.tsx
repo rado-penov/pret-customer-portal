@@ -9,6 +9,7 @@ export default function ConsolidatedInvoicesPage() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState("");
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     fetch("/api/consolidated-invoices")
@@ -19,9 +20,13 @@ export default function ConsolidatedInvoicesPage() {
 
   async function handleDownload(ci: ConsolidatedInvoice) {
     setDownloading(ci.id);
+    setDownloadError("");
     try {
       const res = await fetch(`/api/consolidated-invoices/${ci.id}/download`);
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -31,8 +36,8 @@ export default function ConsolidatedInvoicesPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      // silently fail — user can retry
+    } catch (e) {
+      setDownloadError(e instanceof Error ? e.message : "Download failed.");
     } finally {
       setDownloading(null);
     }
@@ -46,6 +51,7 @@ export default function ConsolidatedInvoicesPage() {
       </div>
 
       {error && <div className="rounded bg-red-50 border border-red-200 px-4 py-3 text-sm text-pret-red-mid">{error}</div>}
+      {downloadError && <div className="rounded bg-red-50 border border-red-200 px-4 py-3 text-sm text-pret-red-mid">Download error: {downloadError}</div>}
 
       <div className="bg-white border border-pret-bg-warm rounded shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

@@ -18,7 +18,7 @@ export async function GET(
 
   try {
     const buffer = await getConsolidatedInvoicePdf(params.id, session.customerId);
-    if (!buffer) return NextResponse.json({ error: "PDF not found." }, { status: 404 });
+    if (!buffer) return NextResponse.json({ error: "PDF not found — no file linked to this consolidated invoice." }, { status: 404 });
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
@@ -27,7 +27,8 @@ export async function GET(
       },
     });
   } catch (err) {
-    console.error("Consolidated invoice download error:", err);
-    return NextResponse.json({ error: "Failed to download PDF." }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Consolidated invoice download error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
