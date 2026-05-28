@@ -30,6 +30,8 @@ function exportInvoicesCSV(invoices: Invoice[]) {
 
 export default function InvoicesPage() {
   const [invoices, setInvoices]             = useState<Invoice[]>([]);
+  const [tranStart, setTranStart]           = useState("");
+  const [tranEnd, setTranEnd]               = useState("");
   const [endDate, setEndDate]               = useState("");
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState("");
@@ -82,15 +84,32 @@ export default function InvoicesPage() {
     }
   }
 
-  function load(date?: string) {
+  function load(opts?: { tranStart?: string; tranEnd?: string; endDate?: string }) {
     setLoading(true);
     setError("");
-    const qs = date ? `?endDate=${date}` : "";
+    const params = new URLSearchParams();
+    if (opts?.tranStart) params.set("tranStart", opts.tranStart);
+    if (opts?.tranEnd)   params.set("tranEnd",   opts.tranEnd);
+    if (opts?.endDate)   params.set("endDate",   opts.endDate);
+    const qs = params.toString() ? `?${params.toString()}` : "";
     fetch(`/api/invoices${qs}`)
       .then((r) => r.json())
       .then((d) => { "error" in d ? setError(d.error) : setInvoices(d); setLoading(false); })
       .catch(() => { setError("Failed to load invoices."); setLoading(false); });
   }
+
+  function applyFilter() {
+    load({ tranStart: tranStart || undefined, tranEnd: tranEnd || undefined, endDate: endDate || undefined });
+  }
+
+  function clearFilter() {
+    setTranStart("");
+    setTranEnd("");
+    setEndDate("");
+    load();
+  }
+
+  const hasFilter = tranStart || tranEnd || endDate;
 
   useEffect(() => { load(); }, []);
 
@@ -105,7 +124,23 @@ export default function InvoicesPage() {
           <p className="text-sm text-pret-text-muted mt-1">All unpaid invoices on your account</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap">Due by</label>
+          <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap">Invoice date</label>
+          <input
+            type="date"
+            value={tranStart}
+            onChange={(e) => setTranStart(e.target.value)}
+            className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
+            placeholder="From"
+          />
+          <span className="text-pret-text-muted text-xs">–</span>
+          <input
+            type="date"
+            value={tranEnd}
+            onChange={(e) => setTranEnd(e.target.value)}
+            className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
+            placeholder="To"
+          />
+          <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap ml-2">Due by</label>
           <input
             type="date"
             value={endDate}
@@ -113,13 +148,13 @@ export default function InvoicesPage() {
             className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
           />
           <button
-            onClick={() => load(endDate || undefined)}
+            onClick={applyFilter}
             className="bg-pret-red hover:bg-pret-red-deep text-white text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
           >
             Filter
           </button>
-          {endDate && (
-            <button onClick={() => { setEndDate(""); load(); }} className="text-xs text-pret-text-muted hover:text-pret-text">
+          {hasFilter && (
+            <button onClick={clearFilter} className="text-xs text-pret-text-muted hover:text-pret-text">
               Clear
             </button>
           )}

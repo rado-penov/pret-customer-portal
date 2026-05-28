@@ -11,10 +11,11 @@ import {
 export const mockQueries = {
   getDashboard: () => Promise.resolve(MOCK_DASHBOARD),
 
-  getOpenInvoices: (endDate?: string) => {
-    const invoices = endDate
-      ? MOCK_INVOICES.filter((i) => i.dueDate <= endDate)
-      : MOCK_INVOICES;
+  getOpenInvoices: (filter: { tranStart?: string; tranEnd?: string; endDate?: string } = {}) => {
+    let invoices = [...MOCK_INVOICES];
+    if (filter.tranStart) invoices = invoices.filter((i) => i.tranDate >= filter.tranStart!);
+    if (filter.tranEnd)   invoices = invoices.filter((i) => i.tranDate <= filter.tranEnd!);
+    if (filter.endDate)   invoices = invoices.filter((i) => i.dueDate  <= filter.endDate!);
     return Promise.resolve(invoices);
   },
 

@@ -117,8 +117,22 @@ interface RawInvoice {
   currency: string;
 }
 
-export async function getOpenInvoices(customerId: string, endDate?: string): Promise<Invoice[]> {
-  const dateClause = endDate ? `AND t.duedate <= TO_DATE('${endDate}', 'YYYY-MM-DD')` : "";
+interface InvoiceFilter {
+  tranStart?: string;
+  tranEnd?:   string;
+  endDate?:   string;
+}
+
+export async function getOpenInvoices(customerId: string, filter: InvoiceFilter = {}): Promise<Invoice[]> {
+  const clauses: string[] = [
+    `t.type = 'CustInvc'`,
+    `t.entity = ${customerId}`,
+    `t.foreignamountunpaid > 0`,
+  ];
+  if (filter.tranStart) clauses.push(`t.trandate >= TO_DATE('${filter.tranStart}', 'YYYY-MM-DD')`);
+  if (filter.tranEnd)   clauses.push(`t.trandate <= TO_DATE('${filter.tranEnd}',   'YYYY-MM-DD')`);
+  if (filter.endDate)   clauses.push(`t.duedate  <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
+
   const baseSelect = `
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
@@ -127,10 +141,7 @@ export async function getOpenInvoices(customerId: string, endDate?: string): Pro
   const from = `
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
-    WHERE t.type = 'CustInvc'
-      AND t.entity = ${customerId}
-      AND t.foreignamountunpaid > 0
-      ${dateClause}
+    WHERE ${clauses.join(" AND ")}
     ORDER BY t.duedate ASC`;
 
   let rows: RawInvoice[];
