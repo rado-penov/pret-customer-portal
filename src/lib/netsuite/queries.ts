@@ -119,20 +119,27 @@ interface RawInvoice {
 
 export async function getOpenInvoices(customerId: string, endDate?: string): Promise<Invoice[]> {
   const dateClause = endDate ? `AND t.duedate <= TO_DATE('${endDate}', 'YYYY-MM-DD')` : "";
-  const rows = await suiteQL<RawInvoice>(`
+  const baseSelect = `
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
            t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
-           cur.symbol AS currency,
-           t.custbody_nsts_ci_number AS cinumber
+           cur.symbol AS currency`;
+  const from = `
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.type = 'CustInvc'
       AND t.entity = ${customerId}
       AND t.foreignamountunpaid > 0
       ${dateClause}
-    ORDER BY t.duedate ASC
-  `);
+    ORDER BY t.duedate ASC`;
+
+  let rows: RawInvoice[];
+  try {
+    rows = await suiteQL<RawInvoice>(`${baseSelect}, t.custbody_nsts_ci_number AS cinumber${from}`);
+  } catch {
+    // Field may not be accessible in this account — fall back without CI number
+    rows = await suiteQL<RawInvoice>(`${baseSelect}, '' AS cinumber${from}`);
+  }
 
   return rows.map(mapInvoice);
 }
