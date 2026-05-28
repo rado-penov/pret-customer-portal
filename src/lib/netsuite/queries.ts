@@ -135,7 +135,7 @@ export async function getOpenInvoices(customerId: string, endDate?: string): Pro
 
   let rows: RawInvoice[];
   try {
-    rows = await suiteQL<RawInvoice>(`${baseSelect}, t.custbody_nsts_ci_number AS cinumber${from}`);
+    rows = await suiteQL<RawInvoice>(`${baseSelect}, t.custbody_pret_ci_nmber_display AS cinumber${from}`);
   } catch {
     // Field may not be accessible in this account — fall back without CI number
     rows = await suiteQL<RawInvoice>(`${baseSelect}, '' AS cinumber${from}`);

@@ -198,20 +198,16 @@ export default function InvoicesPage() {
                     <td className={`px-4 py-3 text-right ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>{fmt(inv.total, inv.currency)}</td>
                     <td className={`px-4 py-3 text-right ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmt(inv.amountPaid, inv.currency)}</td>
                     <td className={`px-4 py-3 text-right font-bold ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>{fmt(inv.amountDue, inv.currency)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleDownload(inv)}
                           disabled={downloadingId === inv.id}
                           className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors disabled:opacity-50"
-                          title="Download PDF"
                         >
-                          {downloadingId === inv.id ? "…" : (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                          )}
+                          {downloadingId === inv.id ? "…" : "PDF ↓"}
                         </button>
+                        <span className="text-pret-text-muted">|</span>
                         <Link
                           href={`/invoices/${inv.id}`}
                           className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors"
