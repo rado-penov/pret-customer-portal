@@ -10,6 +10,7 @@ export interface SessionUser {
 export interface Invoice {
   id: string;
   tranId: string;
+  ciNumber: string;
   tranDate: string;
   dueDate: string;
   memo: string;

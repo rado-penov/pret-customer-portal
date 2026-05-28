@@ -106,6 +106,7 @@ export async function getDashboardData(customerId: string): Promise<DashboardDat
 interface RawInvoice {
   id: string;
   tranid: string;
+  cinumber: string;
   trandate: string;
   duedate: string;
   memo: string;
@@ -122,7 +123,8 @@ export async function getOpenInvoices(customerId: string, endDate?: string): Pro
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
            t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
-           cur.symbol AS currency
+           cur.symbol AS currency,
+           t.custbody_nsts_ci_number AS cinumber
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.type = 'CustInvc'
@@ -418,6 +420,7 @@ function mapInvoice(r: RawInvoice): Invoice {
   return {
     id: r.id,
     tranId: r.tranid,
+    ciNumber: r.cinumber ?? "",
     tranDate: r.trandate,
     dueDate: r.duedate,
     memo: r.memo ?? "",

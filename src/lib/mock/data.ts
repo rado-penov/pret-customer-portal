@@ -16,6 +16,7 @@ export const MOCK_INVOICES: Invoice[] = [
   {
     id: "1001",
     tranId: "INV-10042",
+    ciNumber: "CI-2025-0028",
     tranDate: daysAgo(60),
     dueDate: daysAgo(32),
     memo: "Catering services – February 2025",
@@ -28,6 +29,7 @@ export const MOCK_INVOICES: Invoice[] = [
   {
     id: "1002",
     tranId: "INV-10051",
+    ciNumber: "CI-2025-0028",
     tranDate: daysAgo(45),
     dueDate: daysAgo(17),
     memo: "Corporate lunch – March batch A",
@@ -40,6 +42,7 @@ export const MOCK_INVOICES: Invoice[] = [
   {
     id: "1003",
     tranId: "INV-10058",
+    ciNumber: "CI-2025-0041",
     tranDate: daysAgo(30),
     dueDate: daysAgo(8),
     memo: "Office breakfast programme – Q1",
@@ -52,6 +55,7 @@ export const MOCK_INVOICES: Invoice[] = [
   {
     id: "1004",
     tranId: "INV-10067",
+    ciNumber: "",
     tranDate: daysAgo(14),
     dueDate: daysAgo(3),
     memo: "Event catering – London Bridge",
@@ -64,6 +68,7 @@ export const MOCK_INVOICES: Invoice[] = [
   {
     id: "1005",
     tranId: "INV-10072",
+    ciNumber: "",
     tranDate: daysAgo(7),
     dueDate: daysAgo(0),
     memo: "Weekly subscription – April W4",
@@ -122,6 +127,7 @@ export const MOCK_CREDIT_MEMO_DETAILS: Record<string, TransactionDetail> = {
   "t5": {
     id: "t5",
     tranId: "CM-0042",
+    ciNumber: "",
     tranDate: daysAgo(25),
     dueDate: daysAgo(25),
     memo: "Credit: damaged equipment",

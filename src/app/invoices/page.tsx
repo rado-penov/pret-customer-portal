@@ -8,12 +8,12 @@ import { fmt, fmtDate } from "@/lib/format";
 function exportInvoicesCSV(invoices: Invoice[]) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const headers = ["Reference", "Date", "Due Date", "Days Overdue", "Memo", "Currency", "Total", "Paid", "Amount Due"];
+  const headers = ["Reference", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Currency", "Total", "Paid", "Amount Due"];
   const rows = invoices.map((inv) => {
     const due = new Date(inv.dueDate);
     due.setHours(0, 0, 0, 0);
     const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)));
-    return [inv.tranId, inv.tranDate, inv.dueDate, daysOverdue || "", inv.memo, inv.currency, inv.total, inv.amountPaid, inv.amountDue];
+    return [inv.tranId, inv.ciNumber, inv.tranDate, inv.dueDate, daysOverdue || "", inv.memo, inv.currency, inv.total, inv.amountPaid, inv.amountDue];
   });
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
@@ -29,11 +29,12 @@ function exportInvoicesCSV(invoices: Invoice[]) {
 }
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices]         = useState<Invoice[]>([]);
-  const [endDate, setEndDate]           = useState("");
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState("");
+  const [invoices, setInvoices]             = useState<Invoice[]>([]);
+  const [endDate, setEndDate]               = useState("");
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState("");
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [downloadingId, setDownloadingId]   = useState<string | null>(null);
 
   async function handleDownloadAll() {
     setDownloadingAll(true);
@@ -57,6 +58,27 @@ export default function InvoicesPage() {
       // silently fail — user can retry
     } finally {
       setDownloadingAll(false);
+    }
+  }
+
+  async function handleDownload(inv: Invoice) {
+    setDownloadingId(inv.id);
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}/pdf`);
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${inv.tranId.toUpperCase().replace(/[^A-Z0-9]/g, "")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setDownloadingId(null);
     }
   }
 
@@ -134,7 +156,7 @@ export default function InvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Reference", "Date", "Due Date", "Days Overdue", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
+                {["Reference", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted">
                     {h}
                   </th>
@@ -142,9 +164,9 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
-              {loading && <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
+              {loading && <tr><td colSpan={10} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
               {!loading && invoices.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
               )}
               {invoices.map((inv) => {
                 const today = new Date();
@@ -156,6 +178,7 @@ export default function InvoicesPage() {
                 return (
                   <tr key={inv.id} className="hover:bg-pret-bg transition-colors">
                     <td className={`px-4 py-3 font-semibold ${isOverdue ? "text-pret-red" : "text-pret-teal"}`}>{inv.tranId}</td>
+                    <td className="px-4 py-3 text-pret-text-muted">{inv.ciNumber || ""}</td>
                     <td className={`px-4 py-3 ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmtDate(inv.tranDate)}</td>
                     <td className="px-4 py-3">
                       <span className={`font-medium ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>
@@ -176,12 +199,26 @@ export default function InvoicesPage() {
                     <td className={`px-4 py-3 text-right ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmt(inv.amountPaid, inv.currency)}</td>
                     <td className={`px-4 py-3 text-right font-bold ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>{fmt(inv.amountDue, inv.currency)}</td>
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/invoices/${inv.id}`}
-                        className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors"
-                      >
-                        View →
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleDownload(inv)}
+                          disabled={downloadingId === inv.id}
+                          className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors disabled:opacity-50"
+                          title="Download PDF"
+                        >
+                          {downloadingId === inv.id ? "…" : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          )}
+                        </button>
+                        <Link
+                          href={`/invoices/${inv.id}`}
+                          className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors"
+                        >
+                          View →
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -190,7 +227,7 @@ export default function InvoicesPage() {
             {!loading && invoices.length > 0 && (
               <tfoot>
                 <tr className="border-t-2 border-pret-bg-warm bg-pret-bg">
-                  <td colSpan={7} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
+                  <td colSpan={8} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
                     Total outstanding
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-pret-red text-base">{fmt(total, currency)}</td>
