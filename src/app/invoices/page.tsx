@@ -118,51 +118,53 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-pret-text">Invoices</h1>
           <p className="text-sm text-pret-text-muted mt-1">All unpaid invoices on your account</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap">Invoice date</label>
-          <input
-            type="date"
-            value={tranStart}
-            onChange={(e) => setTranStart(e.target.value)}
-            className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
-            placeholder="From"
-          />
-          <span className="text-pret-text-muted text-xs">–</span>
-          <input
-            type="date"
-            value={tranEnd}
-            onChange={(e) => setTranEnd(e.target.value)}
-            className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
-            placeholder="To"
-          />
-          <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap ml-2">Due by</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
-          />
-          <button
-            onClick={applyFilter}
-            className="bg-pret-red hover:bg-pret-red-deep text-white text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
-          >
-            Filter
-          </button>
-          {hasFilter && (
-            <button onClick={clearFilter} className="text-xs text-pret-text-muted hover:text-pret-text">
-              Clear
+        <div className="flex flex-col gap-3 items-end">
+          {/* Filters row */}
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap">Invoice date</label>
+            <input
+              type="date"
+              value={tranStart}
+              onChange={(e) => setTranStart(e.target.value)}
+              className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
+            />
+            <span className="text-pret-text-muted text-xs">–</span>
+            <input
+              type="date"
+              value={tranEnd}
+              onChange={(e) => setTranEnd(e.target.value)}
+              className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
+            />
+            <label className="text-xs uppercase tracking-widest font-semibold text-pret-text-muted whitespace-nowrap ml-2">Due by</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none"
+            />
+            <button
+              onClick={applyFilter}
+              className="bg-pret-red hover:bg-pret-red-deep text-white text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
+            >
+              Filter
             </button>
-          )}
+            {hasFilter && (
+              <button onClick={clearFilter} className="text-xs text-pret-text-muted hover:text-pret-text">
+                Clear
+              </button>
+            )}
+          </div>
+          {/* Action buttons — stacked, equal width */}
           {invoices.length > 0 && (
-            <>
+            <div className="flex flex-col gap-2 w-44">
               <button
                 onClick={() => exportInvoicesCSV(invoices)}
-                className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
+                className="flex items-center justify-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -172,14 +174,14 @@ export default function InvoicesPage() {
               <button
                 onClick={handleDownloadAll}
                 disabled={downloadingAll}
-                className="flex items-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 border border-[#D9D4D5] bg-white hover:bg-pret-bg text-pret-text text-xs font-semibold uppercase tracking-widest rounded px-4 py-2 transition-colors disabled:opacity-50"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 {downloadingAll ? "Generating…" : "Download All"}
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
