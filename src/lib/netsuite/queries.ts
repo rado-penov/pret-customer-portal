@@ -178,13 +178,14 @@ export async function getTransactions(
   if (filter.startDate)  clauses.push(`t.trandate >= TO_DATE('${filter.startDate}', 'YYYY-MM-DD')`);
   if (filter.endDate)    clauses.push(`t.trandate <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
   if (filter.type)       clauses.push(`t.type = '${filter.type}'`);
-  if (filter.status)     clauses.push(`LOWER(t.status) LIKE LOWER('%${filter.status.replace(/'/g, "''")}%')`);
+  if (filter.status)     clauses.push(`LOWER(BUILTIN.DF(t.status)) LIKE LOWER('%${filter.status.replace(/'/g, "''")}%')`);
   if (filter.tranId)     clauses.push(`LOWER(t.tranid) LIKE LOWER('%${filter.tranId.replace(/'/g, "''")}%')`);
   if (filter.otherRefNum) clauses.push(`LOWER(t.otherrefnum) LIKE LOWER('%${filter.otherRefNum.replace(/'/g, "''")}%')`);
 
   const rows = await suiteQL<RawTransaction>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
-           t.type, t.otherrefnum, t.memo, t.foreigntotal, t.status,
+           t.type, t.otherrefnum, t.memo, t.foreigntotal,
+           BUILTIN.DF(t.status) AS status,
            cur.symbol AS currency
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
