@@ -58,7 +58,7 @@ export default function ConsolidatedInvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Reference", "CI Date", "Due Date", "Invoices", "Total Due", ""].map((h) => (
+                {["Reference", "CI Date", "Due Date", "Invoices", "Amount Total", "Amount Paid", "Total Due", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
                     {h}
                   </th>
@@ -67,10 +67,10 @@ export default function ConsolidatedInvoicesPage() {
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
               {loading && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-pret-text-muted">Loading…</td></tr>
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted">Loading…</td></tr>
               )}
               {!loading && items.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-pret-text-muted">No consolidated invoices found.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted">No consolidated invoices found.</td></tr>
               )}
               {items.map((ci) => {
                 const isOverdue = ci.dueDate < new Date().toISOString().slice(0, 10);
@@ -84,6 +84,8 @@ export default function ConsolidatedInvoicesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-pret-text">{ci.invoiceCount}</td>
+                    <td className="px-4 py-3 text-pret-text">{fmt(ci.amountTotal, "GBP")}</td>
+                    <td className="px-4 py-3 text-[#487302] font-medium">{fmt(ci.amountPaid, "GBP")}</td>
                     <td className={`px-4 py-3 font-bold ${isOverdue ? "text-pret-red" : "text-pret-text"}`}>
                       {fmt(ci.totalDue, "GBP")}
                     </td>

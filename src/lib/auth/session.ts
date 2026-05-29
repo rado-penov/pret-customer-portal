@@ -9,7 +9,7 @@ export async function createSession(user: SessionUser): Promise<string> {
   return new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("8h")
+    .setExpirationTime("30m")
     .sign(secret);
 }
 
@@ -30,7 +30,7 @@ const SECURE = process.env.NODE_ENV === "production" ? "; Secure" : "";
 export function setSessionCookie(token: string, response: Response): void {
   response.headers.append(
     "Set-Cookie",
-    `${COOKIE_NAME}=${token}; HttpOnly${SECURE}; SameSite=Lax; Path=/; Max-Age=28800`
+    `${COOKIE_NAME}=${token}; HttpOnly${SECURE}; SameSite=Lax; Path=/; Max-Age=1800`
   );
 }
 

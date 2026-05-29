@@ -3,6 +3,7 @@ import "./globals.css";
 import { getSession } from "@/lib/auth/session";
 import NavBar from "@/components/ui/NavBar";
 import PRETtyWidget from "@/components/ui/PRETtyWidget";
+import IdleTimer from "@/components/ui/IdleTimer";
 
 export const metadata: Metadata = {
   title: "Pret A Manger | Customer Portal",
@@ -22,6 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {children}
             </main>
             <PRETtyWidget />
+            <IdleTimer />
           </div>
         ) : (
           children

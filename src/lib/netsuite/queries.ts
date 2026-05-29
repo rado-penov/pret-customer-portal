@@ -175,10 +175,11 @@ export async function getTransactions(
 ): Promise<Transaction[]> {
   const clauses: string[] = [`t.entity = ${customerId}`];
 
-  if (filter.startDate) clauses.push(`t.trandate >= TO_DATE('${filter.startDate}', 'YYYY-MM-DD')`);
-  if (filter.endDate)   clauses.push(`t.trandate <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
-  if (filter.type)      clauses.push(`t.type = '${filter.type}'`);
-  if (filter.tranId)    clauses.push(`LOWER(t.tranid) LIKE LOWER('%${filter.tranId.replace(/'/g, "''")}%')`);
+  if (filter.startDate)  clauses.push(`t.trandate >= TO_DATE('${filter.startDate}', 'YYYY-MM-DD')`);
+  if (filter.endDate)    clauses.push(`t.trandate <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
+  if (filter.type)       clauses.push(`t.type = '${filter.type}'`);
+  if (filter.status)     clauses.push(`LOWER(t.status) LIKE LOWER('%${filter.status.replace(/'/g, "''")}%')`);
+  if (filter.tranId)     clauses.push(`LOWER(t.tranid) LIKE LOWER('%${filter.tranId.replace(/'/g, "''")}%')`);
   if (filter.otherRefNum) clauses.push(`LOWER(t.otherrefnum) LIKE LOWER('%${filter.otherRefNum.replace(/'/g, "''")}%')`);
 
   const rows = await suiteQL<RawTransaction>(`
@@ -359,6 +360,8 @@ interface RawCI {
   duedate: string;
   totaldue: string;
   invoicecount: string;
+  amounttotal: string;
+  amountpaid: string;
   fileid: string;
 }
 
@@ -366,11 +369,13 @@ export async function getConsolidatedInvoices(customerId: string): Promise<Conso
   const rows = await suiteQL<RawCI>(`
     SELECT id,
            name,
-           custrecord_nsts_ci_date         AS cidate,
-           custrecord_nsts_ci_tran_duedate AS duedate,
-           custrecord_nsts_ci_pdf_total_due  AS totaldue,
-           custrecord_nsts_ci_count_invoices AS invoicecount,
-           custrecord_nsts_ci_pdffile        AS fileid
+           custrecord_nsts_ci_date              AS cidate,
+           custrecord_nsts_ci_tran_duedate      AS duedate,
+           custrecord_nsts_ci_pdf_total_due     AS totaldue,
+           custrecord_nsts_ci_count_invoices    AS invoicecount,
+           custrecord_nsts_ci_pdf_itemtotal     AS amounttotal,
+           custrecord_nsts_ci_pdf_amountpaid    AS amountpaid,
+           custrecord_nsts_ci_pdffile           AS fileid
     FROM customrecord_nsts_ci_consolidate_invoice
     WHERE custrecord_nsts_ci_customer = ${customerId}
     ORDER BY custrecord_nsts_ci_date DESC
@@ -383,6 +388,8 @@ export async function getConsolidatedInvoices(customerId: string): Promise<Conso
     dueDate: normaliseDate(r.duedate),
     totalDue: parseFloat(r.totaldue ?? "0"),
     invoiceCount: parseInt(r.invoicecount ?? "0", 10),
+    amountTotal: parseFloat(r.amounttotal ?? "0"),
+    amountPaid: parseFloat(r.amountpaid ?? "0"),
     fileId: r.fileid ?? null,
   }));
 }

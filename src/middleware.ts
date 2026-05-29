@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
+
+const COOKIE_NAME = "portal_session";
+const SECURE = process.env.NODE_ENV === "production" ? "; Secure" : "";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -14,13 +17,27 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   if (PUBLIC_PATHS.some((p) => path.startsWith(p))) return NextResponse.next();
 
-  const token = req.cookies.get("portal_session")?.value;
+  const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.redirect(new URL("/login", req.url));
 
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-    await jwtVerify(token, secret);
-    return NextResponse.next();
+    const { payload } = await jwtVerify(token, secret);
+
+    // Slide the session: reissue a fresh 30-min token on every authenticated request
+    const { exp: _exp, iat: _iat, ...user } = payload;
+    const newToken = await new SignJWT(user)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("30m")
+      .sign(secret);
+
+    const res = NextResponse.next();
+    res.headers.append(
+      "Set-Cookie",
+      `${COOKIE_NAME}=${newToken}; HttpOnly${SECURE}; SameSite=Lax; Path=/; Max-Age=1800`
+    );
+    return res;
   } catch {
     return NextResponse.redirect(new URL("/login", req.url));
   }

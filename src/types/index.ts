@@ -75,6 +75,8 @@ export interface ConsolidatedInvoice {
   dueDate: string;
   totalDue: number;
   invoiceCount: number;
+  amountTotal: number;
+  amountPaid: number;
   fileId: string | null;
 }
 
@@ -95,6 +97,7 @@ export interface TransactionFilter {
   startDate?: string;
   endDate?: string;
   type?: string;
+  status?: string;
   tranId?: string;
   otherRefNum?: string;
 }

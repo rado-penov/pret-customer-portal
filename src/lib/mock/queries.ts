@@ -34,6 +34,7 @@ export const mockQueries = {
     if (filter.startDate)   txns = txns.filter((t) => t.tranDate >= filter.startDate!);
     if (filter.endDate)     txns = txns.filter((t) => t.tranDate <= filter.endDate!);
     if (filter.type)        txns = txns.filter((t) => t.type === filter.type);
+    if (filter.status)      txns = txns.filter((t) => t.status.toLowerCase().includes(filter.status!.toLowerCase()));
     if (filter.tranId)      txns = txns.filter((t) => t.tranId.toLowerCase().includes(filter.tranId!.toLowerCase()));
     if (filter.otherRefNum) txns = txns.filter((t) => t.otherRefNum.toLowerCase().includes(filter.otherRefNum!.toLowerCase()));
     return Promise.resolve(txns);

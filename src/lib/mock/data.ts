@@ -178,6 +178,8 @@ export const MOCK_CONSOLIDATED_INVOICES: ConsolidatedInvoice[] = [
     dueDate: daysAgo(15),
     totalDue: 20650.00,
     invoiceCount: 3,
+    amountTotal: 22500.00,
+    amountPaid: 1850.00,
     fileId: null,
   },
   {
@@ -187,6 +189,8 @@ export const MOCK_CONSOLIDATED_INVOICES: ConsolidatedInvoice[] = [
     dueDate: daysAgo(45),
     totalDue: 14200.00,
     invoiceCount: 2,
+    amountTotal: 15800.00,
+    amountPaid: 1600.00,
     fileId: null,
   },
 ];

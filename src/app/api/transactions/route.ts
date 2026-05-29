@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     startDate:   p.get("startDate")   ?? undefined,
     endDate:     p.get("endDate")     ?? undefined,
     type:        p.get("type")        ?? undefined,
+    status:      p.get("status")      ?? undefined,
     tranId:      p.get("tranId")      ?? undefined,
     otherRefNum: p.get("otherRefNum") ?? undefined,
   };

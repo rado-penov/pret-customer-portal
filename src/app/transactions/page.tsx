@@ -7,11 +7,12 @@ import { TRANSACTION_TYPE_LABELS } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
 function exportTransactionsCSV(transactions: Transaction[]) {
-  const headers = ["Date", "Reference", "Type", "Customer Ref", "Memo", "Currency", "Amount"];
+  const headers = ["Date", "Reference", "Type", "Status", "Customer Ref", "Memo", "Currency", "Amount"];
   const rows = transactions.map((t) => [
     t.tranDate,
     t.tranId,
     t.typeLabel,
+    t.status || "",
     t.otherRefNum || "",
     t.memo || "",
     t.currency,
@@ -47,6 +48,7 @@ export default function TransactionsPage() {
   const [startDate, setStartDate]           = useState("");
   const [endDate, setEndDate]               = useState("");
   const [type, setType]                     = useState("");
+  const [status, setStatus]                 = useState("");
   const [tranId, setTranId]                 = useState("");
   const [otherRefNum, setOtherRefNum]       = useState("");
   const [downloadingAll, setDownloadingAll] = useState(false);
@@ -77,11 +79,12 @@ export default function TransactionsPage() {
   }
 
   function buildQS(overrides?: Partial<Record<string, string>>) {
-    const vals = { startDate, endDate, type, tranId, otherRefNum, ...overrides };
+    const vals = { startDate, endDate, type, status, tranId, otherRefNum, ...overrides };
     const p = new URLSearchParams();
     if (vals.startDate)   p.set("startDate",   vals.startDate);
     if (vals.endDate)     p.set("endDate",     vals.endDate);
     if (vals.type)        p.set("type",        vals.type);
+    if (vals.status)      p.set("status",      vals.status);
     if (vals.tranId)      p.set("tranId",      vals.tranId);
     if (vals.otherRefNum) p.set("otherRefNum", vals.otherRefNum);
     return p.toString();
@@ -101,20 +104,20 @@ export default function TransactionsPage() {
   function handleSubmit(e: FormEvent) { e.preventDefault(); load(); }
 
   function handleClear() {
-    setStartDate(""); setEndDate(""); setType(""); setTranId(""); setOtherRefNum("");
-    load({ startDate: "", endDate: "", type: "", tranId: "", otherRefNum: "" });
+    setStartDate(""); setEndDate(""); setType(""); setStatus(""); setTranId(""); setOtherRefNum("");
+    load({ startDate: "", endDate: "", type: "", status: "", tranId: "", otherRefNum: "" });
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-pret-text">Transactions</h1>
+        <h1 className="text-2xl font-semibold text-pret-text">Statement</h1>
         <p className="text-sm text-pret-text-muted mt-1">Filter your full transaction history</p>
       </div>
 
       {/* Filters */}
       <form onSubmit={handleSubmit} className="bg-white border border-pret-bg-warm rounded shadow-sm p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {[
             { label: "Date from", type: "date", value: startDate, set: setStartDate, placeholder: "" },
             { label: "Date to",   type: "date", value: endDate,   set: setEndDate,   placeholder: "" },
@@ -134,6 +137,12 @@ export default function TransactionsPage() {
                 <option key={t} value={t}>{t ? TRANSACTION_TYPE_LABELS[t] : "All types"}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted mb-1.5">Status</label>
+            <input type="text" value={status} placeholder="e.g. Open"
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full rounded border border-[#D9D4D5] bg-white px-3 py-2 text-sm text-pret-text focus:ring-2 focus:ring-pret-red focus:outline-none" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted mb-1.5">Reference</label>
@@ -197,7 +206,7 @@ export default function TransactionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Date", "Reference", "Type", "Customer Ref", "Memo", "Amount", ""].map((h) => (
+                {["Date", "Reference", "Type", "Status", "Customer Ref", "Memo", "Amount", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
                     {h}
                   </th>
@@ -206,7 +215,7 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
               {!loading && transactions.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
               )}
               {transactions.map((t) => {
                 const isCredit = t.type === "CustPymt" || t.type === "CustCred";
@@ -219,6 +228,7 @@ export default function TransactionsPage() {
                         {t.typeLabel}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-pret-text-muted text-xs">{t.status || "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted">{t.otherRefNum || "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted max-w-xs truncate">{t.memo || "—"}</td>
                     <td className={`px-4 py-3 text-right font-semibold ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
