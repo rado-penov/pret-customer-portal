@@ -203,7 +203,7 @@ export async function getTransactions(
     otherRefNum: r.otherrefnum ?? "",
     memo: r.memo ?? "",
     total: parseFloat(r.foreigntotal ?? "0"),
-    status: r.status,
+    status: r.status?.includes(" : ") ? r.status.split(" : ").slice(1).join(" : ") : (r.status ?? ""),
     currency: r.currency,
   }));
 }
