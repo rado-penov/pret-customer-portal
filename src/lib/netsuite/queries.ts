@@ -411,6 +411,24 @@ interface FileRestletResult {
   error?: string;
 }
 
+// ─── Invoice PDF (via N/render RESTlet) ──────────────────────────────────────
+
+export async function getInvoicePdfFromNetsuite(invoiceId: string): Promise<Buffer | null> {
+  const scriptId = process.env.NS_FILE_RESTLET_SCRIPT_ID!;
+  const deployId = process.env.NS_FILE_RESTLET_DEPLOY_ID!;
+  if (!scriptId || !deployId) throw new Error("NS_FILE_RESTLET_SCRIPT_ID / NS_FILE_RESTLET_DEPLOY_ID not configured");
+
+  interface Result { content?: string; mimeType?: string; name?: string; error?: string; }
+  const result = await callRestletGet<Result>(scriptId, deployId, { transactionId: invoiceId });
+
+  if (result.error) throw new Error(`Transaction PDF RESTlet error: ${result.error}`);
+  if (!result.content) return null;
+
+  return Buffer.from(result.content, "base64");
+}
+
+// ─── Consolidated Invoice PDF ─────────────────────────────────────────────────
+
 export async function getConsolidatedInvoicePdf(
   ciId: string,
   customerId: string

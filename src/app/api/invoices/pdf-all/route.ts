@@ -5,7 +5,7 @@ import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import JSZip from "jszip";
 import { getSession } from "@/lib/auth/session";
-import { getOpenInvoices, getInvoiceDetail } from "@/lib/netsuite/queries";
+import { getOpenInvoices, getInvoiceDetail, getInvoicePdfFromNetsuite } from "@/lib/netsuite/queries";
 import { isDemoMode, mockQueries } from "@/lib/mock";
 import { InvoicePDF } from "@/lib/pdf/invoice-pdf";
 
@@ -26,18 +26,27 @@ export async function GET(_req: NextRequest) {
 
     await Promise.all(
       invoices.map(async (inv) => {
-        const detail = isDemoMode()
-          ? await mockQueries.getInvoiceDetail(inv.id)
-          : await getInvoiceDetail(inv.id, session.customerId);
+        try {
+          let buffer: Buffer;
 
-        if (!detail) return;
+          if (isDemoMode()) {
+            const detail = await mockQueries.getInvoiceDetail(inv.id);
+            if (!detail) return;
+            const element = React.createElement(InvoicePDF, { invoice: detail, companyName: session.companyName });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            buffer = await renderToBuffer(element as any);
+          } else {
+            const pdf = await getInvoicePdfFromNetsuite(inv.id);
+            if (!pdf) return;
+            buffer = pdf;
+          }
 
-        const element = React.createElement(InvoicePDF, { invoice: detail, companyName: session.companyName });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const buffer = await renderToBuffer(element as any);
-
-        const filename = `${detail.tranId.toUpperCase().replace(/[^A-Z0-9]/g, "")}.pdf`;
-        zip.file(filename, buffer);
+          const filename = `${inv.tranId.toUpperCase().replace(/[^A-Z0-9]/g, "")}.pdf`;
+          zip.file(filename, buffer);
+        } catch (err) {
+          console.error(`PDF failed for invoice ${inv.tranId}:`, err);
+          // Skip failed invoice — continue building ZIP with remaining
+        }
       })
     );
 
