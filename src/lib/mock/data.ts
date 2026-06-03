@@ -25,6 +25,7 @@ export const MOCK_INVOICES: Invoice[] = [
     amountPaid: 0,
     amountDue: 12450.00,
     currency: "GBP",
+    entityName: "Pret Development",
   },
   {
     id: "1002",
@@ -38,6 +39,7 @@ export const MOCK_INVOICES: Invoice[] = [
     amountPaid: 4000.00,
     amountDue: 4200.00,
     currency: "GBP",
+    entityName: "Pret Development",
   },
   {
     id: "1003",
@@ -51,6 +53,7 @@ export const MOCK_INVOICES: Invoice[] = [
     amountPaid: 0,
     amountDue: 6750.00,
     currency: "GBP",
+    entityName: "Pret Development – North",
   },
   {
     id: "1004",
@@ -64,6 +67,7 @@ export const MOCK_INVOICES: Invoice[] = [
     amountPaid: 0,
     amountDue: 3100.00,
     currency: "GBP",
+    entityName: "Pret Development – North",
   },
   {
     id: "1005",
@@ -77,6 +81,7 @@ export const MOCK_INVOICES: Invoice[] = [
     amountPaid: 0,
     amountDue: 1850.00,
     currency: "GBP",
+    entityName: "Pret Development",
   },
 ];
 
@@ -145,13 +150,13 @@ export const MOCK_CREDIT_MEMO_DETAILS: Record<string, TransactionDetail> = {
 };
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: "t1", tranId: "INV-10042", tranDate: daysAgo(60), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250101", memo: "Catering services – February 2025",   total: 12450.00, status: "Open",   currency: "GBP" },
-  { id: "t2", tranId: "INV-10051", tranDate: daysAgo(45), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250112", memo: "Corporate lunch – March batch A",     total: 8200.00,  status: "Open",   currency: "GBP" },
-  { id: "t3", tranId: "PMT-4120",  tranDate: daysAgo(40), type: "CustPymt", typeLabel: "Payment",      otherRefNum: "",             memo: "Partial payment INV-10051",          total: 4000.00,  status: "Closed", currency: "GBP" },
-  { id: "t4", tranId: "INV-10058", tranDate: daysAgo(30), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250203", memo: "Office breakfast programme – Q1",    total: 6750.00,  status: "Open",   currency: "GBP" },
-  { id: "t5", tranId: "CM-0042",   tranDate: daysAgo(25), type: "CustCred", typeLabel: "Credit Memo",  otherRefNum: "",             memo: "Credit: damaged equipment",          total: 350.00,   status: "Closed", currency: "GBP" },
-  { id: "t6", tranId: "INV-10067", tranDate: daysAgo(14), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250318", memo: "Event catering – London Bridge",     total: 3100.00,  status: "Open",   currency: "GBP" },
-  { id: "t7", tranId: "INV-10072", tranDate: daysAgo(7),  type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250401", memo: "Weekly subscription – April W4",     total: 1850.00,  status: "Open",   currency: "GBP" },
+  { id: "t1", tranId: "INV-10042", tranDate: daysAgo(60), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250101", memo: "Catering services – February 2025",   total: 12450.00, status: "Open",   currency: "GBP", entityName: "Pret Development" },
+  { id: "t2", tranId: "INV-10051", tranDate: daysAgo(45), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250112", memo: "Corporate lunch – March batch A",     total: 8200.00,  status: "Open",   currency: "GBP", entityName: "Pret Development" },
+  { id: "t3", tranId: "PMT-4120",  tranDate: daysAgo(40), type: "CustPymt", typeLabel: "Payment",      otherRefNum: "",             memo: "Partial payment INV-10051",          total: 4000.00,  status: "Closed", currency: "GBP", entityName: "Pret Development" },
+  { id: "t4", tranId: "INV-10058", tranDate: daysAgo(30), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250203", memo: "Office breakfast programme – Q1",    total: 6750.00,  status: "Open",   currency: "GBP", entityName: "Pret Development – North" },
+  { id: "t5", tranId: "CM-0042",   tranDate: daysAgo(25), type: "CustCred", typeLabel: "Credit Memo",  otherRefNum: "",             memo: "Credit: damaged equipment",          total: 350.00,   status: "Closed", currency: "GBP", entityName: "Pret Development – North" },
+  { id: "t6", tranId: "INV-10067", tranDate: daysAgo(14), type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250318", memo: "Event catering – London Bridge",     total: 3100.00,  status: "Open",   currency: "GBP", entityName: "Pret Development – North" },
+  { id: "t7", tranId: "INV-10072", tranDate: daysAgo(7),  type: "CustInvc", typeLabel: "Invoice",      otherRefNum: "PO-20250401", memo: "Weekly subscription – April W4",     total: 1850.00,  status: "Open",   currency: "GBP", entityName: "Pret Development" },
 ];
 
 export const MOCK_DASHBOARD: DashboardData = {

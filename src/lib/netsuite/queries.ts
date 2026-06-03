@@ -115,6 +115,20 @@ interface RawInvoice {
   foreignamountpaid: string;
   foreignamountunpaid: string;
   currency: string;
+  entityname?: string;
+}
+
+async function getEntityIds(customerId: string): Promise<string[]> {
+  try {
+    const rows = await suiteQL<{ id: string }>(`
+      SELECT id FROM customer
+      WHERE parent = ${customerId}
+        AND isinactive = 'F'
+    `);
+    return [customerId, ...rows.map((r) => r.id)];
+  } catch {
+    return [customerId];
+  }
 }
 
 interface InvoiceFilter {
@@ -124,9 +138,14 @@ interface InvoiceFilter {
 }
 
 export async function getOpenInvoices(customerId: string, filter: InvoiceFilter = {}): Promise<Invoice[]> {
+  const entityIds = await getEntityIds(customerId);
+  const entityClause = entityIds.length === 1
+    ? `t.entity = ${entityIds[0]}`
+    : `t.entity IN (${entityIds.join(",")})`;
+
   const clauses: string[] = [
     `t.type = 'CustInvc'`,
-    `t.entity = ${customerId}`,
+    entityClause,
     `t.foreignamountunpaid > 0`,
   ];
   if (filter.tranStart) clauses.push(`t.trandate >= TO_DATE('${filter.tranStart}', 'YYYY-MM-DD')`);
@@ -137,10 +156,11 @@ export async function getOpenInvoices(customerId: string, filter: InvoiceFilter 
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
            t.memo, t.status, t.foreigntotal, t.foreignamountpaid, t.foreignamountunpaid,
-           cur.symbol AS currency`;
+           cur.symbol AS currency, cust.companyname AS entityname`;
   const from = `
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
+    LEFT JOIN customer cust ON cust.id = t.entity
     WHERE ${clauses.join(" AND ")}
     ORDER BY t.duedate ASC`;
 
@@ -167,13 +187,19 @@ interface RawTransaction {
   foreigntotal: string;
   status: string;
   currency: string;
+  entityname?: string;
 }
 
 export async function getTransactions(
   customerId: string,
   filter: TransactionFilter
 ): Promise<Transaction[]> {
-  const clauses: string[] = [`t.entity = ${customerId}`];
+  const entityIds = await getEntityIds(customerId);
+  const entityClause = entityIds.length === 1
+    ? `t.entity = ${entityIds[0]}`
+    : `t.entity IN (${entityIds.join(",")})`;
+
+  const clauses: string[] = [entityClause];
 
   if (filter.startDate)  clauses.push(`t.trandate >= TO_DATE('${filter.startDate}', 'YYYY-MM-DD')`);
   if (filter.endDate)    clauses.push(`t.trandate <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
@@ -186,9 +212,11 @@ export async function getTransactions(
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            t.type, t.otherrefnum, t.memo, t.foreigntotal,
            BUILTIN.DF(t.status) AS status,
-           cur.symbol AS currency
+           cur.symbol AS currency,
+           cust.companyname AS entityname
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
+    LEFT JOIN customer cust ON cust.id = t.entity
     WHERE ${clauses.join(" AND ")}
     ORDER BY t.trandate DESC
     FETCH FIRST 500 ROWS ONLY
@@ -205,6 +233,7 @@ export async function getTransactions(
     total: parseFloat(r.foreigntotal ?? "0"),
     status: r.status?.includes(" : ") ? r.status.split(" : ").slice(1).join(" : ") : (r.status ?? ""),
     currency: r.currency,
+    entityName: r.entityname ?? "",
   }));
 }
 
@@ -473,5 +502,6 @@ function mapInvoice(r: RawInvoice): Invoice {
     amountPaid: parseFloat(r.foreignamountpaid ?? "0"),
     amountDue: parseFloat(r.foreignamountunpaid ?? "0"),
     currency: r.currency,
+    entityName: r.entityname ?? "",
   };
 }

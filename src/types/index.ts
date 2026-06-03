@@ -19,6 +19,7 @@ export interface Invoice {
   amountPaid: number;
   amountDue: number;
   currency: string;
+  entityName?: string;
 }
 
 export interface InvoiceLine {
@@ -50,6 +51,7 @@ export interface Transaction {
   total: number;
   status: string;
   currency: string;
+  entityName?: string;
 }
 
 export interface DashboardData {

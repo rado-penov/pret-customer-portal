@@ -8,12 +8,12 @@ import { fmt, fmtDate } from "@/lib/format";
 function exportInvoicesCSV(invoices: Invoice[]) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const headers = ["Reference", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Currency", "Total", "Paid", "Amount Due"];
+  const headers = ["Reference", "Customer", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Currency", "Total", "Paid", "Amount Due"];
   const rows = invoices.map((inv) => {
     const due = new Date(inv.dueDate);
     due.setHours(0, 0, 0, 0);
     const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)));
-    return [inv.tranId, inv.ciNumber, inv.tranDate, inv.dueDate, daysOverdue || "", inv.memo, inv.currency, inv.total, inv.amountPaid, inv.amountDue];
+    return [inv.tranId, inv.entityName ?? "", inv.ciNumber, inv.tranDate, inv.dueDate, daysOverdue || "", inv.memo, inv.currency, inv.total, inv.amountPaid, inv.amountDue];
   });
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
@@ -193,7 +193,7 @@ export default function InvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Reference", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
+                {["Reference", "Customer", "CI Invoice", "Date", "Due Date", "Days Overdue", "Memo", "Total", "Paid", "Amount Due", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted">
                     {h}
                   </th>
@@ -201,9 +201,9 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
-              {loading && <tr><td colSpan={10} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
+              {loading && <tr><td colSpan={11} className="px-4 py-10 text-center text-pret-text-muted text-sm">Loading…</td></tr>}
               {!loading && invoices.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
+                <tr><td colSpan={11} className="px-4 py-10 text-center text-pret-text-muted text-sm">No open invoices found.</td></tr>
               )}
               {invoices.map((inv) => {
                 const today = new Date();
@@ -215,6 +215,7 @@ export default function InvoicesPage() {
                 return (
                   <tr key={inv.id} className="hover:bg-pret-bg transition-colors">
                     <td className={`px-4 py-3 font-semibold ${isOverdue ? "text-pret-red" : "text-pret-teal"}`}>{inv.tranId}</td>
+                    <td className="px-4 py-3 text-pret-text-muted">{inv.entityName || ""}</td>
                     <td className="px-4 py-3 text-pret-text-muted">{inv.ciNumber || ""}</td>
                     <td className={`px-4 py-3 ${isOverdue ? "text-pret-red" : "text-pret-text-muted"}`}>{fmtDate(inv.tranDate)}</td>
                     <td className="px-4 py-3">
@@ -260,7 +261,7 @@ export default function InvoicesPage() {
             {!loading && invoices.length > 0 && (
               <tfoot>
                 <tr className="border-t-2 border-pret-bg-warm bg-pret-bg">
-                  <td colSpan={8} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
+                  <td colSpan={9} className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
                     Total outstanding
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-pret-red text-base">{fmt(total, currency)}</td>

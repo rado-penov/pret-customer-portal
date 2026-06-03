@@ -7,10 +7,11 @@ import { TRANSACTION_TYPE_LABELS } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
 function exportTransactionsCSV(transactions: Transaction[]) {
-  const headers = ["Date", "Reference", "Type", "Status", "Customer Ref", "Memo", "Currency", "Amount"];
+  const headers = ["Date", "Reference", "Customer", "Type", "Status", "Customer Ref", "Memo", "Currency", "Amount"];
   const rows = transactions.map((t) => [
     t.tranDate,
     t.tranId,
+    t.entityName ?? "",
     t.typeLabel,
     t.status || "",
     t.otherRefNum || "",
@@ -206,7 +207,7 @@ export default function TransactionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Date", "Reference", "Type", "Status", "Customer Ref", "Memo", "Amount", ""].map((h) => (
+                {["Date", "Reference", "Customer", "Type", "Status", "Customer Ref", "Memo", "Amount", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
                     {h}
                   </th>
@@ -215,7 +216,7 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
               {!loading && transactions.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
               )}
               {transactions.map((t) => {
                 const isCredit = t.type === "CustPymt" || t.type === "CustCred";
@@ -223,6 +224,7 @@ export default function TransactionsPage() {
                   <tr key={t.id} className="hover:bg-pret-bg transition-colors">
                     <td className="px-4 py-3 text-pret-text-muted whitespace-nowrap">{fmtDate(t.tranDate)}</td>
                     <td className="px-4 py-3 font-semibold text-pret-teal">{t.tranId}</td>
+                    <td className="px-4 py-3 text-pret-text-muted">{t.entityName || ""}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${TYPE_PILL[t.type] ?? "bg-pret-bg text-pret-text-muted"}`}>
                         {t.typeLabel}
