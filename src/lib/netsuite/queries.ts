@@ -186,6 +186,8 @@ interface RawTransaction {
   id: string;
   tranid: string;
   trandate: string;
+  duedate: string;
+  cinumber?: string;
   type: string;
   otherrefnum: string;
   memo: string;
@@ -213,24 +215,34 @@ export async function getTransactions(
   if (filter.tranId)     clauses.push(`LOWER(t.tranid) LIKE LOWER('%${filter.tranId.replace(/'/g, "''")}%')`);
   if (filter.otherRefNum) clauses.push(`LOWER(t.otherrefnum) LIKE LOWER('%${filter.otherRefNum.replace(/'/g, "''")}%')`);
 
-  const rows = await suiteQL<RawTransaction>(`
+  const baseSelect = `
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
+           TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
            t.type, t.otherrefnum, t.memo, t.foreigntotal,
            BUILTIN.DF(t.status) AS status,
            cur.symbol AS currency,
-           cust.companyname AS entityname
+           cust.companyname AS entityname`;
+  const fromClause = `
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
     LEFT JOIN customer cust ON cust.id = t.entity
     WHERE ${clauses.join(" AND ")}
     ORDER BY t.trandate DESC
-    FETCH FIRST 500 ROWS ONLY
-  `);
+    FETCH FIRST 500 ROWS ONLY`;
+
+  let rows: RawTransaction[];
+  try {
+    rows = await suiteQL<RawTransaction>(`${baseSelect}, t.custbody_pret_ci_nmber_display AS cinumber${fromClause}`);
+  } catch {
+    rows = await suiteQL<RawTransaction>(`${baseSelect}, '' AS cinumber${fromClause}`);
+  }
 
   return rows.map((r) => ({
     id: r.id,
     tranId: r.tranid,
     tranDate: r.trandate,
+    dueDate: r.duedate ?? "",
+    ciNumber: r.cinumber ?? "",
     type: r.type,
     typeLabel: TRANSACTION_TYPE_LABELS[r.type] ?? r.type,
     otherRefNum: r.otherrefnum ?? "",

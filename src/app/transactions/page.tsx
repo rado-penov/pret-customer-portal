@@ -7,14 +7,16 @@ import { TRANSACTION_TYPE_LABELS } from "@/types";
 import { fmt, fmtDate } from "@/lib/format";
 
 function exportTransactionsCSV(transactions: Transaction[]) {
-  const headers = ["Date", "Reference", "Customer", "Type", "Status", "Customer Ref", "Memo", "Currency", "Amount"];
+  const headers = ["Date", "Reference", "Customer", "CI", "Type", "Status", "Customer Ref", "Due Date", "Memo", "Currency", "Amount"];
   const rows = transactions.map((t) => [
     t.tranDate,
     t.tranId,
     t.entityName ?? "",
+    t.ciNumber || "",
     t.typeLabel,
     t.status || "",
     t.otherRefNum || "",
+    t.dueDate || "",
     t.memo || "",
     t.currency,
     t.total,
@@ -207,7 +209,7 @@ export default function TransactionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Date", "Reference", "Customer", "Type", "Status", "Customer Ref", "Memo", "Amount", ""].map((h) => (
+                {["Date", "Reference", "Customer", "CI", "Type", "Status", "Customer Ref", "Due Date", "Memo", "Amount", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
                     {h}
                   </th>
@@ -216,7 +218,7 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
               {!loading && transactions.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
+                <tr><td colSpan={11} className="px-4 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
               )}
               {transactions.map((t) => {
                 const isCredit = t.type === "CustPymt" || t.type === "CustCred";
@@ -225,6 +227,7 @@ export default function TransactionsPage() {
                     <td className="px-4 py-3 text-pret-text-muted whitespace-nowrap">{fmtDate(t.tranDate)}</td>
                     <td className="px-4 py-3 font-semibold text-pret-teal">{t.tranId}</td>
                     <td className="px-4 py-3 text-pret-text-muted">{t.entityName || ""}</td>
+                    <td className="px-4 py-3 text-pret-text-muted text-xs">{t.ciNumber || "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${TYPE_PILL[t.type] ?? "bg-pret-bg text-pret-text-muted"}`}>
                         {t.typeLabel}
@@ -232,6 +235,7 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-4 py-3 text-pret-text-muted text-xs">{t.status || "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted">{t.otherRefNum || "—"}</td>
+                    <td className="px-4 py-3 text-pret-text-muted whitespace-nowrap">{t.dueDate ? fmtDate(t.dueDate) : "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted max-w-xs truncate">{t.memo || "—"}</td>
                     <td className={`px-4 py-3 text-right font-semibold ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
                       {isCredit ? "-" : ""}{fmt(Math.abs(t.total), t.currency)}

@@ -44,6 +44,8 @@ export interface Transaction {
   id: string;
   tranId: string;
   tranDate: string;
+  dueDate?: string;
+  ciNumber?: string;
   type: string;
   typeLabel: string;
   otherRefNum: string;
