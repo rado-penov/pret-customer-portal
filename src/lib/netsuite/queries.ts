@@ -60,6 +60,11 @@ interface RawAging {
 }
 
 export async function getDashboardData(customerId: string): Promise<DashboardData> {
+  const entityIds = await getEntityIds(customerId);
+  const entityClause = entityIds.length === 1
+    ? `t.entity = ${entityIds[0]}`
+    : `t.entity IN (${entityIds.join(",")})`;
+
   const rows = await suiteQL<RawAging>(`
     SELECT
       SUM(t.foreignamountunpaid) AS totalamount,
@@ -76,7 +81,7 @@ export async function getDashboardData(customerId: string): Promise<DashboardDat
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.type = 'CustInvc'
-      AND t.entity = ${customerId}
+      AND ${entityClause}
       AND t.duedate < SYSDATE
       AND t.foreignamountunpaid > 0
     GROUP BY cur.symbol
