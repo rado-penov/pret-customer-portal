@@ -237,7 +237,7 @@ export default function TransactionsPage() {
                     <td className="px-4 py-3 text-pret-text-muted">{t.otherRefNum || "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted whitespace-nowrap">{t.dueDate ? fmtDate(t.dueDate) : "—"}</td>
                     <td className="px-4 py-3 text-pret-text-muted max-w-xs truncate">{t.memo || "—"}</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
+                    <td className={`px-4 py-3 font-semibold ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
                       {isCredit ? "-" : ""}{fmt(Math.abs(t.total), t.currency)}
                     </td>
                     <td className="px-4 py-3 text-right">
