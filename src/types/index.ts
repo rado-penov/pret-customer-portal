@@ -111,7 +111,8 @@ export type TransactionType =
   | "CustPymt"
   | "CustCred"
   | "CustRfnd"
-  | "CustDep";
+  | "CustDep"
+  | "Journal";
 
 export const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   CustInvc: "Invoice",
@@ -119,4 +120,5 @@ export const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   CustCred: "Credit Memo",
   CustRfnd: "Customer Refund",
   CustDep: "Customer Deposit",
+  Journal: "Journal",
 };
