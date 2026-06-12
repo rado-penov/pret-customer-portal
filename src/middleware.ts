@@ -15,28 +15,13 @@ const PUBLIC_PATHS = [
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-
-  // Redirect authenticated users away from /login to dashboard
-  if (path.startsWith("/login")) {
-    const token = req.cookies.get(COOKIE_NAME)?.value;
-    if (token) {
-      try {
-        await jwtVerify(token, secret);
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      } catch {
-        // Token invalid — fall through and show login page
-      }
-    }
-    return NextResponse.next();
-  }
-
   if (PUBLIC_PATHS.some((p) => path.startsWith(p))) return NextResponse.next();
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.redirect(new URL("/login", req.url));
 
   try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
     const { payload } = await jwtVerify(token, secret);
 
     // Slide the session: reissue a fresh 30-min token on every authenticated request
