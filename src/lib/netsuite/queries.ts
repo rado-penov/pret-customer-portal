@@ -1,4 +1,4 @@
-import { suiteQL, callRestlet, callRestletGet, nsPatch, nsGetBinary } from "./client";
+import { suiteQL, callRestlet, callRestletGet, nsPatch } from "./client";
 import type {
   Invoice,
   InvoiceDetail,
@@ -202,16 +202,27 @@ export async function getTransactions(
   filter: TransactionFilter
 ): Promise<Transaction[]> {
   const entityIds = await getEntityIds(customerId);
-  const entityClause = entityIds.length === 1
-    ? `t.entity = ${entityIds[0]}`
-    : `t.entity IN (${entityIds.join(",")})`;
+  const entityIn    = entityIds.length === 1 ? `= ${entityIds[0]}` : `IN (${entityIds.join(",")})`;
+
+  // Non-journals match on header entity; journals match on transactionline entity
+  const entityClause = `(
+    (t.type != 'Journal' AND t.entity ${entityIn})
+    OR
+    (t.type = 'Journal' AND EXISTS (
+      SELECT 1 FROM transactionline tl
+      WHERE tl.transaction = t.id
+        AND tl.entity ${entityIn}
+        AND tl.mainline = 'F'
+    ))
+  )`;
 
   const clauses: string[] = [entityClause];
 
   if (filter.startDate)  clauses.push(`t.trandate >= TO_DATE('${filter.startDate}', 'YYYY-MM-DD')`);
   if (filter.endDate)    clauses.push(`t.trandate <= TO_DATE('${filter.endDate}',   'YYYY-MM-DD')`);
   if (filter.type)       clauses.push(`t.type = '${filter.type}'`);
-  if (filter.status)     clauses.push(`LOWER(BUILTIN.DF(t.status)) LIKE LOWER('%${filter.status.replace(/'/g, "''")}%')`);
+  // Journals have no meaningful status — exclude them from status filtering
+  if (filter.status)     clauses.push(`(t.type = 'Journal' OR LOWER(BUILTIN.DF(t.status)) LIKE LOWER('%${filter.status.replace(/'/g, "''")}%'))`);
   if (filter.tranId)     clauses.push(`LOWER(t.tranid) LIKE LOWER('%${filter.tranId.replace(/'/g, "''")}%')`);
   if (filter.otherRefNum) clauses.push(`LOWER(t.otherrefnum) LIKE LOWER('%${filter.otherRefNum.replace(/'/g, "''")}%')`);
 
