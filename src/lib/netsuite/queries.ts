@@ -412,12 +412,15 @@ export async function getTransactionDetail(
   if (r.type === "Journal") {
     const jlRows = await suiteQL<RawJournalLine>(`
       SELECT tl.id,
-             BUILTIN.DF(tl.account) AS account,
-             tl.memo                AS description,
-             NVL(tl.foreigndebit,  tl.debit)  AS debit,
-             NVL(tl.foreigncredit, tl.credit) AS credit,
+             acct.accountsearchdisplayname AS account,
+             tl.memo AS description,
+             CASE WHEN NVL(tl.foreignamount, tl.amount) > 0
+                  THEN NVL(tl.foreignamount, tl.amount) ELSE 0 END AS debit,
+             CASE WHEN NVL(tl.foreignamount, tl.amount) < 0
+                  THEN ABS(NVL(tl.foreignamount, tl.amount)) ELSE 0 END AS credit,
              BUILTIN.DF(tl.entity) AS entity
       FROM transactionline tl
+      LEFT JOIN account acct ON acct.id = tl.account
       WHERE tl.transaction = ${transactionId}
         AND tl.entity ${entityIn}
       ORDER BY tl.id ASC

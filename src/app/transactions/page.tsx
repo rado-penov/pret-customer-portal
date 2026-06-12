@@ -209,7 +209,7 @@ export default function TransactionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pret-bg-warm">
-                {["Date", "Reference", "Customer", "CI", "Type", "Status", "Customer Ref", "Due Date", "Memo", "Amount", ""].map((h) => (
+                {["Date", "Reference", "CI", "Type", "Status", "Customer Ref", "Due Date", "Memo", "Amount", ""].map((h) => (
                   <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
                     {h}
                   </th>
@@ -218,7 +218,7 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-pret-bg-warm">
               {!loading && transactions.length === 0 && (
-                <tr><td colSpan={11} className="px-3 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
+                <tr><td colSpan={10} className="px-3 py-10 text-center text-pret-text-muted">No transactions found.</td></tr>
               )}
               {transactions.map((t) => {
                 const isCredit = t.type === "CustPymt" || t.type === "CustCred";
@@ -226,7 +226,6 @@ export default function TransactionsPage() {
                   <tr key={t.id} className="hover:bg-pret-bg transition-colors">
                     <td className="px-3 py-3 text-pret-text-muted whitespace-nowrap">{fmtDate(t.tranDate)}</td>
                     <td className="px-3 py-3 font-semibold text-pret-teal whitespace-nowrap">{t.tranId}</td>
-                    <td className="px-3 py-3 text-pret-text-muted">{t.entityName || ""}</td>
                     <td className="px-3 py-3 text-pret-text-muted text-xs whitespace-nowrap">{t.ciNumber || "—"}</td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${TYPE_PILL[t.type] ?? "bg-pret-bg text-pret-text-muted"}`}>
