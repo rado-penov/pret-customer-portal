@@ -249,8 +249,6 @@ export async function getTransactions(
   if (!filter.type || filter.type === "Journal") {
     const clauses = [
       `t.type = 'Journal'`,
-      `tl.entity ${entityIn}`,
-      `tl.mainline = 'F'`,
       ...commonClauses,
     ];
     // Status filter is not applied to journals — they have no meaningful status
@@ -263,7 +261,7 @@ export async function getTransactions(
                BUILTIN.DF(t.status) AS status,
                cur.symbol AS currency, '' AS entityname, '' AS cinumber
         FROM transaction t
-        JOIN transactionline tl ON tl.transaction = t.id
+        JOIN transactionline tl ON tl.transaction = t.id AND tl.entity ${entityIn}
         LEFT JOIN currency cur ON cur.id = t.currency
         WHERE ${clauses.join(" AND ")}
         ORDER BY t.trandate DESC
