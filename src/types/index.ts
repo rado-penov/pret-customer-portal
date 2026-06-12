@@ -35,9 +35,19 @@ export interface InvoiceDetail extends Invoice {
   lines: InvoiceLine[];
 }
 
+export interface JournalLine {
+  id: string;
+  account: string;
+  description: string;
+  debit: number;
+  credit: number;
+  entity: string;
+}
+
 export interface TransactionDetail extends InvoiceDetail {
   type: string;
   typeLabel: string;
+  journalLines?: JournalLine[];
 }
 
 export interface Transaction {

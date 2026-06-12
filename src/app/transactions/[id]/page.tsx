@@ -35,6 +35,7 @@ export default function TransactionDetailPage() {
 
   const isInvoice  = txn.type === "CustInvc";
   const isCredit   = txn.type === "CustCred";
+  const isJournal  = txn.type === "Journal";
   const isOverdue  = isInvoice && txn.dueDate < new Date().toISOString().slice(0, 10);
 
   return (
@@ -61,7 +62,7 @@ export default function TransactionDetailPage() {
           {isInvoice && (
             <Field label="Due Date" value={fmtDate(txn.dueDate)} accent={isOverdue ? "text-pret-red font-semibold" : ""} />
           )}
-          <Field label="Total"     value={fmt(txn.total, txn.currency)} />
+          {!isJournal && <Field label="Total" value={fmt(txn.total, txn.currency)} />}
           {isInvoice && (
             <Field label="Amount Due" value={fmt(txn.amountDue, txn.currency)} accent="text-pret-red font-bold text-lg" />
           )}
@@ -72,51 +73,84 @@ export default function TransactionDetailPage() {
         </dl>
       </div>
 
-      {/* Line items */}
-      <div className="bg-white border border-pret-bg-warm rounded shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-pret-bg-warm">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-pret-text-muted">Line Items</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-pret-bg-warm">
-                {["Item", "Description", "Qty", "Rate", "Amount"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-pret-bg-warm">
-              {txn.lines.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-pret-text-muted">No line items.</td></tr>
-              )}
-              {txn.lines.map((line) => (
-                <tr key={line.id} className="hover:bg-pret-bg transition-colors">
-                  <td className="px-5 py-3 font-medium text-pret-text">{line.item || "—"}</td>
-                  <td className="px-5 py-3 text-pret-text-muted">{line.description || "—"}</td>
-                  <td className="px-5 py-3 text-pret-text">{line.quantity}</td>
-                  <td className="px-5 py-3 text-pret-text">{fmt(line.rate, txn.currency)}</td>
-                  <td className="px-5 py-3 text-right font-semibold text-pret-text">{fmt(line.amount, txn.currency)}</td>
+      {/* Journal lines */}
+      {isJournal && txn.journalLines && (
+        <div className="bg-white border border-pret-bg-warm rounded shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-pret-bg-warm">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-pret-text-muted">Journal Lines</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-pret-bg-warm">
+                  {["Account", "Description", "Entity", "Debit", "Credit"].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-pret-bg-warm bg-pret-bg">
-                <td colSpan={4} className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
-                  {isCredit ? "Credit total" : "Amount remaining"}
-                </td>
-                <td className={`px-5 py-3 text-right font-bold text-base ${isCredit ? "text-[#487302]" : "text-pret-red"}`}>
-                  {fmt(isCredit ? txn.total : txn.amountDue, txn.currency)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-pret-bg-warm">
+                {txn.journalLines.map((line) => (
+                  <tr key={line.id} className="hover:bg-pret-bg transition-colors">
+                    <td className="px-5 py-3 font-medium text-pret-text">{line.account || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text-muted">{line.description || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text-muted">{line.entity || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text">{line.debit ? fmt(line.debit, txn.currency) : "—"}</td>
+                    <td className="px-5 py-3 text-right text-[#487302] font-medium">{line.credit ? fmt(line.credit, txn.currency) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Pay CTA — payment temporarily hidden */}
+      {/* Non-journal line items */}
+      {!isJournal && (
+        <div className="bg-white border border-pret-bg-warm rounded shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-pret-bg-warm">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-pret-text-muted">Line Items</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-pret-bg-warm">
+                  {["Item", "Description", "Qty", "Rate", "Amount"].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-pret-bg-warm">
+                {txn.lines.length === 0 && (
+                  <tr><td colSpan={5} className="px-5 py-8 text-center text-pret-text-muted">No line items.</td></tr>
+                )}
+                {txn.lines.map((line) => (
+                  <tr key={line.id} className="hover:bg-pret-bg transition-colors">
+                    <td className="px-5 py-3 font-medium text-pret-text">{line.item || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text-muted">{line.description || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text">{line.quantity}</td>
+                    <td className="px-5 py-3 text-pret-text">{fmt(line.rate, txn.currency)}</td>
+                    <td className="px-5 py-3 text-right font-semibold text-pret-text">{fmt(line.amount, txn.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-pret-bg-warm bg-pret-bg">
+                  <td colSpan={4} className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-pret-text-muted text-right">
+                    {isCredit ? "Credit total" : "Amount remaining"}
+                  </td>
+                  <td className={`px-5 py-3 text-right font-bold text-base ${isCredit ? "text-[#487302]" : "text-pret-red"}`}>
+                    {fmt(isCredit ? txn.total : txn.amountDue, txn.currency)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -136,7 +170,7 @@ function BackLink() {
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
-      Transactions
+      Statement
     </Link>
   );
 }

@@ -3,6 +3,7 @@ import type {
   Invoice,
   InvoiceDetail,
   InvoiceLine,
+  JournalLine,
   TransactionDetail,
   Transaction,
   ConsolidatedInvoice,
@@ -376,10 +377,22 @@ interface RawTransactionRow extends RawInvoice {
   type: string;
 }
 
+interface RawJournalLine {
+  id: string;
+  account: string;
+  description: string;
+  debit: string;
+  credit: string;
+  entity: string;
+}
+
 export async function getTransactionDetail(
   transactionId: string,
   customerId: string
 ): Promise<TransactionDetail | null> {
+  const entityIds = await getEntityIds(customerId);
+  const entityIn  = entityIds.length === 1 ? `= ${entityIds[0]}` : `IN (${entityIds.join(",")})`;
+
   const rows = await suiteQL<RawTransactionRow>(`
     SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
            TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
@@ -388,12 +401,49 @@ export async function getTransactionDetail(
     FROM transaction t
     LEFT JOIN currency cur ON cur.id = t.currency
     WHERE t.id = ${transactionId}
-      AND t.entity = ${customerId}
+      AND (t.type = 'Journal' OR t.entity ${entityIn})
     FETCH FIRST 1 ROWS ONLY
   `);
 
   if (!rows[0]) return null;
+  const r = rows[0];
 
+  // ── Journal: return only the customer's lines ─────────────────────────────────
+  if (r.type === "Journal") {
+    const jlRows = await suiteQL<RawJournalLine>(`
+      SELECT tl.id,
+             BUILTIN.DF(tl.account) AS account,
+             tl.memo                AS description,
+             NVL(tl.foreigndebit,  tl.debit)  AS debit,
+             NVL(tl.foreigncredit, tl.credit) AS credit,
+             BUILTIN.DF(tl.entity) AS entity
+      FROM transactionline tl
+      WHERE tl.transaction = ${transactionId}
+        AND tl.entity ${entityIn}
+      ORDER BY tl.id ASC
+    `);
+
+    if (jlRows.length === 0) return null;
+
+    const journalLines: JournalLine[] = jlRows.map((jl) => ({
+      id: jl.id,
+      account: jl.account ?? "",
+      description: jl.description ?? "",
+      debit: parseFloat(jl.debit ?? "0"),
+      credit: parseFloat(jl.credit ?? "0"),
+      entity: jl.entity ?? "",
+    }));
+
+    return {
+      ...mapInvoice(r),
+      type: r.type,
+      typeLabel: TRANSACTION_TYPE_LABELS[r.type] ?? r.type,
+      lines: [],
+      journalLines,
+    };
+  }
+
+  // ── Non-journal: existing line items ──────────────────────────────────────────
   let lines: InvoiceLine[] = [];
   try {
     const lineRows = await suiteQL<RawLine>(`
@@ -419,7 +469,6 @@ export async function getTransactionDetail(
     console.error(`\n[LINE ITEMS ERROR] Transaction ${transactionId}: ${msg}\n`);
   }
 
-  const r = rows[0];
   return {
     ...mapInvoice(r),
     type: r.type,

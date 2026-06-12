@@ -241,7 +241,7 @@ export default function TransactionsPage() {
                       {isCredit ? "-" : ""}{fmt(Math.abs(t.total), t.currency)}
                     </td>
                     <td className="px-3 py-3 text-right">
-                      {(t.type === "CustInvc" || t.type === "CustCred") && (
+                      {(t.type === "CustInvc" || t.type === "CustCred" || t.type === "Journal") && (
                         <Link
                           href={`/transactions/${t.id}`}
                           className="text-[10px] font-semibold uppercase tracking-widest text-pret-teal hover:text-pret-red transition-colors"
