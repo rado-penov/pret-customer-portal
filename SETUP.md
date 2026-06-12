@@ -81,7 +81,7 @@ npm start
 ## 5. Security Notes
 
 - Passwords are bcrypt-hashed (cost 12) — raw passwords never stored
-- JWT sessions are httpOnly, Secure, SameSite=Lax — 8 hour expiry
+- JWT sessions are httpOnly, Secure, SameSite=Lax — 30 minute sliding expiry (token refreshed on every request); client-side idle timer warns at 25 min and forces logout at 30 min of inactivity
 - All API routes re-validate the session on every request
 - SuiteQL queries scope every query to `entity = {customerId}` — customers can never see each other's data
 - The RESTlet validates that each invoice belongs to the requesting customer before applying payment
