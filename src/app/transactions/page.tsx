@@ -210,7 +210,9 @@ export default function TransactionsPage() {
             <thead>
               <tr className="border-b border-pret-bg-warm">
                 {["Date", "Reference", "Customer", "CI", "Type", "Status", "Customer Ref", "Due Date", "Memo", "Amount", ""].map((h) => (
-                  <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
+                  <th key={h} className={`px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted ${
+                    h === "Amount" ? "text-right min-w-[110px]" : h === "" ? "text-right" : "text-left"
+                  }`}>
                     {h}
                   </th>
                 ))}
@@ -234,10 +236,10 @@ export default function TransactionsPage() {
                       </span>
                     </td>
                     <td className="px-3 py-3 text-pret-text-muted text-xs">{t.status || "—"}</td>
-                    <td className="px-3 py-3 text-pret-text-muted">{t.otherRefNum || "—"}</td>
+                    <td className="px-3 py-3 text-pret-text-muted text-xs">{t.otherRefNum || "—"}</td>
                     <td className="px-3 py-3 text-pret-text-muted whitespace-nowrap">{t.dueDate ? fmtDate(t.dueDate) : "—"}</td>
                     <td className="px-3 py-3 text-pret-text-muted max-w-[160px] truncate">{t.memo || "—"}</td>
-                    <td className={`px-3 py-3 font-semibold whitespace-nowrap ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
+                    <td className={`px-3 py-3 font-semibold whitespace-nowrap text-right ${isCredit ? "text-[#487302]" : "text-pret-text"}`}>
                       {isCredit ? "-" : ""}{fmt(Math.abs(t.total), t.currency)}
                     </td>
                     <td className="px-3 py-3 text-right">

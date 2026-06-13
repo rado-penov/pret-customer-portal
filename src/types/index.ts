@@ -37,11 +37,9 @@ export interface InvoiceDetail extends Invoice {
 
 export interface JournalLine {
   id: string;
-  account: string;
-  description: string;
-  debit: number;
-  credit: number;
   entity: string;
+  notes: string;
+  amount: number;
 }
 
 export interface TransactionDetail extends InvoiceDetail {

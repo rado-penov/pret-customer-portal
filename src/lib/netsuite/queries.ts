@@ -379,11 +379,9 @@ interface RawTransactionRow extends RawInvoice {
 
 interface RawJournalLine {
   id: string;
-  account: string;
-  description: string;
-  debit: string;
-  credit: string;
   entity: string;
+  notes: string;
+  amount: string;
 }
 
 export async function getTransactionDetail(
@@ -412,14 +410,13 @@ export async function getTransactionDetail(
   if (r.type === "Journal") {
     const jlRows = await suiteQL<RawJournalLine>(`
       SELECT tl.id,
-             BUILTIN.DF(tl.account) AS account,
-             tl.memo                AS description,
-             NVL(tl.foreigndebit,  tl.debit)  AS debit,
-             NVL(tl.foreigncredit, tl.credit) AS credit,
-             BUILTIN.DF(tl.entity) AS entity
+             BUILTIN.DF(tl.entity) AS entity,
+             tl.memo               AS notes,
+             tl.origcredit         AS amount
       FROM transactionline tl
       WHERE tl.transaction = ${transactionId}
         AND tl.entity ${entityIn}
+        AND NVL(tl.origcredit, 0) > 0
       ORDER BY tl.id ASC
     `);
 
@@ -427,11 +424,9 @@ export async function getTransactionDetail(
 
     const journalLines: JournalLine[] = jlRows.map((jl) => ({
       id: jl.id,
-      account: jl.account ?? "",
-      description: jl.description ?? "",
-      debit: parseFloat(jl.debit ?? "0"),
-      credit: parseFloat(jl.credit ?? "0"),
       entity: jl.entity ?? "",
+      notes: jl.notes ?? "",
+      amount: parseFloat(jl.amount ?? "0"),
     }));
 
     return {

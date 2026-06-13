@@ -83,8 +83,8 @@ export default function TransactionDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-pret-bg-warm">
-                  {["Account", "Description", "Entity", "Debit", "Credit"].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted last:text-right">
+                  {["Name", "Notes", "Amount"].map((h) => (
+                    <th key={h} className={`px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-pret-text-muted ${h === "Amount" ? "text-right" : "text-left"}`}>
                       {h}
                     </th>
                   ))}
@@ -93,11 +93,9 @@ export default function TransactionDetailPage() {
               <tbody className="divide-y divide-pret-bg-warm">
                 {txn.journalLines.map((line) => (
                   <tr key={line.id} className="hover:bg-pret-bg transition-colors">
-                    <td className="px-5 py-3 font-medium text-pret-text">{line.account || "—"}</td>
-                    <td className="px-5 py-3 text-pret-text-muted">{line.description || "—"}</td>
-                    <td className="px-5 py-3 text-pret-text-muted">{line.entity || "—"}</td>
-                    <td className="px-5 py-3 text-pret-text">{line.debit ? fmt(line.debit, txn.currency) : "—"}</td>
-                    <td className="px-5 py-3 text-right text-[#487302] font-medium">{line.credit ? fmt(line.credit, txn.currency) : "—"}</td>
+                    <td className="px-5 py-3 font-medium text-pret-text">{line.entity || "—"}</td>
+                    <td className="px-5 py-3 text-pret-text-muted">{line.notes || "—"}</td>
+                    <td className="px-5 py-3 text-right text-[#487302] font-medium">{line.amount ? fmt(line.amount, txn.currency) : "—"}</td>
                   </tr>
                 ))}
               </tbody>
