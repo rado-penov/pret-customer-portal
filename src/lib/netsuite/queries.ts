@@ -410,14 +410,14 @@ export async function getTransactionDetail(
   if (r.type === "Journal") {
     const jlRows = await suiteQL<RawJournalLine>(`
       SELECT tl.id,
-             BUILTIN.DF(tl.entity) AS entity,
-             tl.memo               AS notes,
-             tl.origcredit         AS amount
+             BUILTIN.DF(tl.entity)    AS entity,
+             tl.memo                  AS notes,
+             tl.creditForeignAmount   AS amount
       FROM transactionline tl
       WHERE tl.transaction = ${transactionId}
         AND tl.entity ${entityIn}
-        AND NVL(tl.origcredit, 0) > 0
-      ORDER BY tl.id ASC
+        AND NVL(tl.creditForeignAmount, 0) > 0
+      ORDER BY tl.linesequencenumber ASC
     `);
 
     if (jlRows.length === 0) return null;
