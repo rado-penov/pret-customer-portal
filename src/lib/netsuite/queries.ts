@@ -256,15 +256,17 @@ export async function getTransactions(
 
     try {
       journalRows = await suiteQL<RawTransaction>(`
-        SELECT DISTINCT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
+        SELECT t.id, t.tranid, TO_CHAR(t.trandate, 'YYYY-MM-DD') AS trandate,
                TO_CHAR(t.duedate, 'YYYY-MM-DD') AS duedate,
-               t.type, t.otherrefnum, t.memo, t.foreigntotal,
-               BUILTIN.DF(t.status) AS status,
+               t.type, t.otherrefnum, t.memo,
+               SUM(NVL(tl.creditForeignAmount, 0)) AS foreigntotal,
+               t.status,
                cur.symbol AS currency, '' AS entityname, '' AS cinumber
         FROM transaction t
         JOIN transactionline tl ON tl.transaction = t.id AND tl.entity ${entityIn}
         LEFT JOIN currency cur ON cur.id = t.currency
         WHERE ${clauses.join(" AND ")}
+        GROUP BY t.id, t.tranid, t.trandate, t.duedate, t.type, t.otherrefnum, t.memo, t.status, cur.symbol
         ORDER BY t.trandate DESC
         FETCH FIRST 500 ROWS ONLY
       `);
